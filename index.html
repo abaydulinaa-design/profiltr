@@ -1,0 +1,2751 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#080810">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ПроФильтр">
+<link rel="manifest" href="manifest.json">
+<title>ПроФильтр 2.0 — Исследование потенциала</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Raleway:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080810;
+  --s1: #0f0f1e;
+  --s2: #161628;
+  --card: #1a1a30;
+  --border: rgba(100,180,255,0.12);
+  --accent: #00c8ff;
+  --accent2: #ff6b35;
+  --accent3: #7fff6b;
+  --gold: #ffd700;
+  --purple: #a855f7;
+  --text: #e8f4ff;
+  --muted: rgba(180,210,255,0.45);
+  --success: #4fffb0;
+  --danger: #ff4f6b;
+  --r: 220px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+html, body {
+  height: 100%; width: 100%;
+  font-family: 'Raleway', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+}
+
+/* ── BACKGROUND ── */
+#bg-canvas {
+  position: fixed; inset: 0; z-index: 0;
+  background:
+    radial-gradient(ellipse 100% 60% at 20% 0%, rgba(0,200,255,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 80% 80% at 80% 100%, rgba(168,85,247,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 60% 50%, rgba(255,107,53,0.04) 0%, transparent 60%),
+    var(--bg);
+}
+
+/* Floating particles */
+.particle {
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  animation: floatParticle linear infinite;
+  opacity: 0;
+}
+@keyframes floatParticle {
+  0%   { transform: translateY(100vh) scale(0); opacity: 0; }
+  10%  { opacity: 0.6; }
+  90%  { opacity: 0.3; }
+  100% { transform: translateY(-20px) scale(1); opacity: 0; }
+}
+
+/* ── SCREENS ── */
+.screen {
+  position: fixed; inset: 0; z-index: 10;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 20px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+.screen.hidden { display: none !important; }
+
+@keyframes screenIn {
+  from { opacity: 0; transform: translateY(30px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.screen:not(.hidden) { animation: screenIn 0.45s cubic-bezier(0.16,1,0.3,1); }
+
+/* ── TYPOGRAPHY ── */
+.t-hero {
+  font-family: 'Russo One', sans-serif;
+  font-size: clamp(2.4rem, 9vw, 5rem);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, var(--accent) 0%, #fff 40%, var(--purple) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.t-title {
+  font-family: 'Russo One', sans-serif;
+  font-size: clamp(1.2rem, 4vw, 2rem);
+  letter-spacing: 0.01em;
+}
+.t-sub {
+  font-size: clamp(0.82rem, 2.2vw, 0.97rem);
+  color: var(--muted);
+  line-height: 1.65;
+}
+.t-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 15px 28px; border-radius: 14px; border: none; cursor: pointer;
+  font-family: 'Russo One', sans-serif; font-size: 0.88rem; letter-spacing: 0.04em;
+  transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1);
+  user-select: none; -webkit-user-select: none;
+}
+.btn-glow {
+  background: linear-gradient(135deg, var(--accent), #0080ff);
+  color: #fff;
+  box-shadow: 0 6px 30px rgba(0,200,255,0.45), 0 0 0 0 rgba(0,200,255,0.3);
+}
+.btn-glow:hover, .btn-glow:active {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 12px 40px rgba(0,200,255,0.65);
+}
+.btn-ghost {
+  background: rgba(0,200,255,0.07);
+  color: var(--accent);
+  border: 1px solid rgba(0,200,255,0.25);
+}
+.btn-ghost:hover { background: rgba(0,200,255,0.14); transform: translateY(-2px); }
+.btn-danger {
+  background: linear-gradient(135deg, var(--accent2), #ff3366);
+  color: #fff;
+  box-shadow: 0 6px 24px rgba(255,107,53,0.4);
+}
+
+/* ── CARD ── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 20px;
+  backdrop-filter: blur(8px);
+}
+
+/* ── OPTION BUTTONS ── */
+.opt-btn {
+  width: 100%;
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  padding: 16px 18px;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1);
+  text-align: left;
+  color: var(--text);
+  display: flex; align-items: flex-start; gap: 12px;
+  font-family: 'Raleway', sans-serif;
+}
+.opt-btn:hover, .opt-btn:active {
+  border-color: var(--accent);
+  background: rgba(0,200,255,0.08);
+  transform: translateX(6px);
+  box-shadow: -4px 0 20px rgba(0,200,255,0.2);
+}
+.opt-btn.selected {
+  border-color: var(--accent);
+  background: rgba(0,200,255,0.12);
+  box-shadow: 0 0 20px rgba(0,200,255,0.25);
+}
+.opt-icon { font-size: 1.5rem; flex-shrink: 0; margin-top: 1px; }
+.opt-text { font-size: 0.88rem; font-weight: 600; line-height: 1.4; }
+
+/* ── PROGRESS ── */
+.prog-wrap {
+  width: 100%; background: rgba(255,255,255,0.05); border-radius: 100px; height: 5px; overflow: hidden;
+}
+.prog-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--purple));
+  border-radius: 100px;
+  transition: width 0.6s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+/* ── TIMER ── */
+.timer-wrap { position: relative; width: 72px; height: 72px; flex-shrink: 0; }
+.timer-wrap svg { transform: rotate(-90deg); }
+.t-ring-bg { fill:none; stroke: rgba(255,255,255,0.07); stroke-width: 4; }
+.t-ring { fill:none; stroke: var(--accent); stroke-width: 4; stroke-linecap: round; stroke-dasharray: 200; transition: stroke-dashoffset 1s linear, stroke 0.5s; }
+.t-num {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Russo One', sans-serif; font-size: 1.1rem;
+}
+
+/* ── BADGE ── */
+.badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 6px 14px; border-radius: 100px;
+  font-family: 'Russo One', sans-serif; font-size: 0.78rem;
+  background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.25); color: var(--gold);
+}
+
+/* ── GAME: MEMORY ── */
+.mem-grid {
+  display: grid; gap: 8px; justify-content: center; margin: 10px auto;
+}
+.mem-cell {
+  width: 68px; height: 68px;
+  background: var(--s2);
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.7rem; cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  user-select: none;
+}
+.mem-cell:hover:not(.face-down):not(.matched) { border-color:var(--accent); }
+.mem-cell.revealed { background: rgba(0,200,255,0.1); border-color:var(--accent); transform:scale(1.06); }
+.mem-cell.matched  { background: rgba(79,255,176,0.12); border-color:var(--success); }
+.mem-cell.face-down { font-size:0; background: linear-gradient(135deg,#1a1a35,#0f0f28); }
+@media(max-width:380px){ .mem-cell{width:58px;height:58px;font-size:1.4rem;} }
+
+/* ── GAME: SPATIAL ── */
+.spatial-figure {
+  display: grid; gap: 4px; margin: 0 auto;
+}
+.spatial-cell {
+  width: 34px; height: 34px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: all 0.2s;
+}
+.spatial-cell.filled { background: var(--accent); box-shadow: 0 0 10px rgba(0,200,255,0.5); }
+.spatial-cell.empty  { background: rgba(255,255,255,0.03); }
+
+.spatial-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0; }
+.spatial-opt {
+  padding: 10px; border-radius: 12px;
+  background: var(--card); border: 1.5px solid var(--border);
+  cursor: pointer; transition: all 0.2s;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+}
+.spatial-opt:hover { border-color: var(--accent); background: rgba(0,200,255,0.08); }
+.spatial-opt.correct { border-color: var(--success); background: rgba(79,255,176,0.1); }
+.spatial-opt.wrong   { border-color: var(--danger); background: rgba(255,79,107,0.1); }
+.spatial-opt .opt-label { font-size: 0.7rem; color: var(--muted); }
+@media(max-width:380px){ .spatial-cell{width:28px;height:28px;} }
+
+/* ── GAME: SEQUENCE ── */
+.seq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 240px; margin: 16px auto; }
+.seq-btn {
+  height: 96px; border-radius: 20px; border: 3px solid rgba(255,255,255,0.15); cursor: pointer;
+  font-size: 2rem;
+  transition: transform 0.1s, filter 0.1s, box-shadow 0.1s, border-color 0.1s;
+  position: relative; overflow: visible;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+.seq-btn::before {
+  content:''; position:absolute; inset:0; border-radius: 17px;
+  background: rgba(255,255,255,0);
+  transition: background 0.07s;
+  z-index:1; pointer-events:none;
+}
+/* МАКСИМАЛЬНАЯ ВСПЫШКА */
+.seq-btn.flash {
+  transform: scale(1.28) !important;
+  filter: brightness(3.5) saturate(2) !important;
+  border-color: #ffffff !important;
+  box-shadow:
+    0 0 0 4px #fff,
+    0 0 30px 10px rgba(255,255,255,0.9),
+    0 0 60px 20px rgba(255,255,255,0.5),
+    0 0 90px 30px rgba(255,255,255,0.2) !important;
+  z-index: 10;
+}
+.seq-btn.flash::before { background: rgba(255,255,255,0.6) !important; }
+.seq-btn:disabled { opacity: 0.38; cursor: default; filter: grayscale(0.3); }
+.seq-btn:not(:disabled):active { transform: scale(0.9); filter: brightness(1.6); }
+/* Счётчик-нумерация над кнопкой */
+.seq-btn .seq-num {
+  position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+  background: #fff; color: #111; border-radius: 50%;
+  width: 22px; height: 22px; font-size: 0.72rem; font-weight: 900;
+  display: none; align-items: center; justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5); z-index: 20;
+  font-family: 'Russo One', sans-serif;
+}
+.seq-btn .seq-num.visible { display: flex; }
+@media(max-width:380px){ .seq-btn{height:80px;font-size:1.6rem;} }
+
+/* ── GAME: PATTERN ── */
+.pattern-row { display: flex; gap: 8px; align-items: center; margin: 6px 0; flex-wrap: wrap; justify-content: center; }
+.pattern-shape {
+  width: 44px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 10px; font-size: 1.4rem;
+  background: var(--s2); border: 1px solid var(--border);
+}
+.pattern-shape.unknown { font-size: 1.6rem; color: var(--accent); background: rgba(0,200,255,0.07); border-color: rgba(0,200,255,0.3); }
+.pattern-answers { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-top: 14px; }
+.pattern-ans {
+  height: 52px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; cursor: pointer; border: 1.5px solid var(--border);
+  background: var(--card); transition: all 0.2s;
+}
+.pattern-ans:hover { border-color:var(--accent); transform:scale(1.06); }
+.pattern-ans.correct-ans { border-color:var(--success); background:rgba(79,255,176,0.12); }
+.pattern-ans.wrong-ans   { border-color:var(--danger); background:rgba(255,79,107,0.12); }
+
+/* ── GAME: INTEREST MAP ── */
+.interest-scene {
+  background: var(--s2); border-radius: 16px; padding: 16px;
+  font-size: 0.9rem; line-height: 1.55; margin-bottom: 16px;
+  border: 1px solid var(--border);
+}
+.interest-opts { display: flex; flex-direction: column; gap: 9px; }
+
+/* ── GAME: INFO SPEED ── */
+.speed-card {
+  background: var(--s2); border-radius: 16px; padding: 20px 24px;
+  border: 1px solid var(--border); margin: 12px 0;
+  font-size: 1.5rem; font-weight: 700; text-align: center; line-height: 1.4;
+  min-height: 80px; display: flex; align-items: center; justify-content: center;
+}
+.speed-answers { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.speed-ans {
+  padding: 14px; border-radius: 13px;
+  background: var(--card); border: 1.5px solid var(--border);
+  cursor: pointer; font-size: 0.9rem; font-weight: 600;
+  transition: all 0.2s; text-align: center;
+}
+.speed-ans:hover { border-color: var(--accent); background: rgba(0,200,255,0.08); }
+.speed-ans.correct { border-color: var(--success); background: rgba(79,255,176,0.15); }
+.speed-ans.wrong   { border-color: var(--danger); background: rgba(255,79,107,0.15); }
+
+/* ── RESULT BARS ── */
+.res-bar { display: flex; align-items: center; gap: 10px; margin: 7px 0; }
+.res-bar-name { font-size: 0.78rem; color: var(--muted); width: 130px; flex-shrink: 0; }
+.res-bar-wrap { flex: 1; height: 7px; background: rgba(255,255,255,0.06); border-radius: 100px; overflow: hidden; }
+.res-bar-fill { height: 100%; border-radius: 100px; transition: width 1.8s cubic-bezier(0.34,1.56,0.64,1); }
+.res-bar-val  { font-family:'Russo One',sans-serif; font-size:0.72rem; width:34px; text-align:right; }
+
+/* ── PROFESSION CARD ── */
+.prof-rank { font-size:0.85rem;font-weight:800;min-width:28px;text-align:center;flex-shrink:0; }
+.prof-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 13px 16px; border-radius: 14px;
+  background: var(--s2); border: 1px solid var(--border);
+  margin: 7px 0; transition: all 0.2s;
+}
+.prof-item:hover { border-color: var(--accent); transform: translateX(5px); }
+.prof-emoji { font-size: 1.8rem; flex-shrink: 0; }
+.prof-body { flex: 1; }
+.prof-name  { font-weight: 700; font-size: 0.9rem; }
+.prof-match { font-size: 0.72rem; color: var(--success); margin-top: 2px; }
+.prof-desc  { font-size: 0.72rem; color: var(--muted); }
+.prof-pct   { font-family:'Russo One',sans-serif; font-size:1.1rem; color:var(--success); flex-shrink:0; }
+
+/* ── PAYWALL ── */
+.paywall-box {
+  background: linear-gradient(135deg, rgba(0,200,255,0.06), rgba(168,85,247,0.06));
+  border: 1px solid rgba(0,200,255,0.2);
+  border-radius: 22px; padding: 24px; text-align: center;
+}
+.price-tag {
+  font-family:'Russo One',sans-serif; font-size: 2.5rem;
+  background: linear-gradient(135deg, var(--gold), var(--accent2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── NOTIFICATION ── */
+#notif {
+  position: fixed; top: 16px; left: 50%; transform: translateX(-50%) translateY(-90px);
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 11px 22px;
+  font-size: 0.84rem; font-weight: 600; z-index: 999;
+  transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1); white-space: nowrap;
+}
+#notif.show { transform: translateX(-50%) translateY(0); }
+#notif.ok  { border-color: rgba(79,255,176,0.4); color: var(--success); }
+#notif.err { border-color: rgba(255,79,107,0.4); color: var(--danger); }
+
+/* ── SPINNER ── */
+.spin {
+  width: 42px; height: 42px; margin: 0 auto;
+  border: 3px solid rgba(0,200,255,0.15);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: rot 0.9s linear infinite;
+}
+@keyframes rot { to { transform:rotate(360deg); } }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
+@keyframes glow { 0%,100%{box-shadow:0 6px 30px rgba(0,200,255,0.4)} 50%{box-shadow:0 6px 50px rgba(0,200,255,0.8)} }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-thumb { background: rgba(0,200,255,0.3); border-radius: 100px; }
+
+/* ── INPUT ── */
+.inp {
+  width: 100%; padding: 16px 18px;
+  background: var(--card); border: 1.5px solid var(--border);
+  border-radius: 14px; color: var(--text);
+  font-family: 'Raleway', sans-serif; font-size: 0.95rem;
+  outline: none; transition: border-color 0.2s;
+}
+.inp:focus { border-color: var(--accent); }
+
+/* max-width wrapper */
+.wrap { max-width: 520px; width: 100%; }
+
+/* planet animation */
+.planet-wrap {
+  width: 160px; height: 160px; position: relative; margin: 0 auto 24px;
+  animation: float 7s ease-in-out infinite;
+}
+.planet-core {
+  width: 100%; height: 100%; border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #00e5ff 0%, #0050c8 45%, #001a60 80%, #000a30 100%);
+  box-shadow: 0 0 60px rgba(0,200,255,0.35), 0 0 120px rgba(0,100,255,0.15), inset -15px -20px 35px rgba(0,0,0,0.5);
+}
+.planet-ring {
+  position:absolute; inset: -24px;
+  border: 2px solid rgba(0,200,255,0.18);
+  border-radius: 50%;
+  border-top-color: transparent; border-left-color: transparent;
+  transform: rotateX(70deg) rotateZ(-20deg);
+  animation: rot 10s linear infinite;
+}
+</style>
+</head>
+<body>
+<div id="bg-canvas"></div>
+<div id="notif"></div>
+
+<!-- ═══════════════ WELCOME ═══════════════ -->
+<div class="screen" id="s-welcome">
+  <div class="wrap" style="text-align:center">
+    <div class="planet-wrap">
+      <div class="planet-core"></div>
+      <div class="planet-ring"></div>
+    </div>
+    <div class="t-hero" style="margin-bottom:10px">ПроФильтр</div>
+    <div style="font-family:'Russo One';font-size:1rem;color:var(--muted);margin-bottom:16px;letter-spacing:0.06em">ВЕРСИЯ 2.0</div>
+    <p class="t-sub" style="margin-bottom:30px;max-width:380px;margin-left:auto;margin-right:auto">
+      Пройди серию испытаний и узнай, в каких сферах ты раскроешься по-настоящему. Без лишних слов — только действие.
+    </p>
+    <div style="display:flex;gap:10px;justify-content:center;margin-bottom:28px;flex-wrap:wrap">
+      <div class="badge">⚡ 7 испытаний</div>
+      <div class="badge" style="background:rgba(168,85,247,0.1);border-color:rgba(168,85,247,0.3);color:var(--purple)">🎯 ~30 мин</div>
+      <div class="badge" style="background:rgba(127,255,107,0.1);border-color:rgba(127,255,107,0.3);color:var(--accent3)">📄 PDF отчёт</div>
+    </div>
+    <button class="btn btn-glow" onclick="showScreen('s-name')" style="width:100%;max-width:300px;font-size:0.95rem;padding:18px">
+      🚀 Начать исследование
+    </button>
+    <br><br>
+    <button class="btn btn-ghost" onclick="showScreen('s-about')" style="font-size:0.76rem;padding:10px 18px">Как это работает?</button>
+  </div>
+</div>
+
+<!-- ═══════════════ ABOUT ═══════════════ -->
+<div class="screen hidden" id="s-about">
+  <div class="wrap">
+    <button class="btn btn-ghost" onclick="showScreen('s-welcome')" style="margin-bottom:20px;padding:9px 16px;font-size:0.75rem">← Назад</button>
+    <div class="t-title" style="margin-bottom:20px">Что тебя ждёт</div>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px">
+      <div class="card" style="display:flex;gap:14px;align-items:flex-start">
+        <span style="font-size:1.8rem">🧩</span>
+        <div><div style="font-weight:700;margin-bottom:3px">Испытания на внимание и мышление</div><div class="t-sub">Серия мини-игр, каждая длится 2–4 минуты. Нет правильных или неправильных результатов.</div></div>
+      </div>
+      <div class="card" style="display:flex;gap:14px;align-items:flex-start">
+        <span style="font-size:1.8rem">🗺️</span>
+        <div><div style="font-weight:700;margin-bottom:3px">Карта интересов и стиля</div><div class="t-sub">Ситуационные выборы — покажи, что тебя на самом деле привлекает.</div></div>
+      </div>
+      <div class="card" style="display:flex;gap:14px;align-items:flex-start">
+        <span style="font-size:1.8rem">📊</span>
+        <div><div style="font-weight:700;margin-bottom:3px">Персональный PDF-отчёт</div><div class="t-sub">Подробная интерпретация: векторы развития, профессии «да» и «нет», карьерный стиль.</div></div>
+      </div>
+    </div>
+    <button class="btn btn-glow" onclick="showScreen('s-name')" style="width:100%">Начать →</button>
+  </div>
+</div>
+
+<!-- ═══════════════ NAME ═══════════════ -->
+<div class="screen hidden" id="s-name">
+  <div class="wrap" style="text-align:center">
+    <div style="font-size:3.5rem;margin-bottom:16px;animation:float 4s ease-in-out infinite">👋</div>
+    <div class="t-title" style="margin-bottom:10px">Как тебя зовут?</div>
+    <p class="t-sub" style="margin-bottom:26px">Имя появится в твоём персональном отчёте</p>
+    <input class="inp" id="inp-name" type="text" placeholder="Введи своё имя..." style="text-align:center;margin-bottom:18px" maxlength="40">
+    <button class="btn btn-glow" onclick="confirmName()" style="width:100%">Продолжить →</button>
+  </div>
+</div>
+
+<!-- ═══════════════ GAME INTRO ═══════════════ -->
+<div class="screen hidden" id="s-intro">
+  <div class="wrap" style="text-align:center">
+    <div id="intro-icon" style="font-size:4.5rem;margin-bottom:16px;animation:float 3s ease-in-out infinite"></div>
+    <div class="t-label" id="intro-block" style="margin-bottom:8px"></div>
+    <div class="t-title" id="intro-title" style="margin-bottom:12px"></div>
+    <p class="t-sub" id="intro-desc" style="margin-bottom:30px;max-width:400px;margin-left:auto;margin-right:auto"></p>
+    <div class="prog-wrap" style="max-width:300px;margin:0 auto 24px">
+      <div class="prog-fill" id="intro-progress" style="width:0%"></div>
+    </div>
+    <div style="font-size:0.78rem;color:var(--muted);margin-bottom:20px" id="intro-step"></div>
+    <button class="btn btn-glow" onclick="launchCurrentGame()" style="width:100%;max-width:280px">▶ Начать испытание</button>
+  </div>
+</div>
+
+<!-- ═══════════════ GAME 1: MEMORY ═══════════════ -->
+<div class="screen hidden" id="s-mem">
+  <div class="wrap">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div>
+        <div class="t-label">Испытание 1 · Концентрация</div>
+        <div class="t-title">Найди пары</div>
+      </div>
+      <div class="timer-wrap">
+        <svg width="72" height="72" viewBox="0 0 72 72">
+          <circle class="t-ring-bg" cx="36" cy="36" r="31"/>
+          <circle class="t-ring" id="mem-ring" cx="36" cy="36" r="31"/>
+        </svg>
+        <div class="t-num" id="mem-time">60</div>
+      </div>
+    </div>
+    <div class="prog-wrap" style="margin-bottom:14px"><div class="prog-fill" id="mem-prog" style="width:0%"></div></div>
+    <div id="mem-grid" class="mem-grid" style="grid-template-columns:repeat(4,auto)"></div>
+    <div style="text-align:center;margin-top:10px;font-size:0.8rem;color:var(--muted)">
+      Найдено: <span id="mem-found">0</span> / <span id="mem-total">0</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ GAME 2: SPATIAL ═══════════════ -->
+<div class="screen hidden" id="s-spatial">
+  <div class="wrap">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div>
+        <div class="t-label">Испытание 2 · Пространство</div>
+        <div class="t-title">Найди фигуру</div>
+      </div>
+      <div class="badge" style="font-size:0.82rem">🎯 <span id="sp-score">0</span>/6</div>
+    </div>
+    <div class="prog-wrap" style="margin-bottom:16px"><div class="prog-fill" id="sp-prog" style="width:0%"></div></div>
+    <p class="t-sub" style="margin-bottom:12px;text-align:center">Какая из фигур справа является зеркальным отражением / поворотом исходной?</p>
+    <div id="sp-question" style="text-align:center;margin:12px 0"></div>
+    <div id="sp-answers" class="spatial-opts"></div>
+    <div id="sp-feedback" style="text-align:center;font-size:0.82rem;min-height:20px;margin-top:8px"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ GAME 3: SEQUENCE ═══════════════ -->
+<div class="screen hidden" id="s-seq">
+  <div class="wrap">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div>
+        <div class="t-label">Испытание 3 · Логика</div>
+        <div class="t-title">Запомни порядок</div>
+      </div>
+      <div class="badge">🔢 Ур. <span id="seq-lv">1</span></div>
+    </div>
+    <div id="seq-msg" class="t-sub" style="text-align:center;margin:12px 0">Внимательно смотри на последовательность...</div>
+    <div class="seq-grid" id="seq-grid">
+      <button class="seq-btn" id="sq0" style="background:linear-gradient(135deg,#0080ff,#00c8ff)" onclick="sqClick(0)"><span class="seq-num" id="sn0"></span>🔷</button>
+      <button class="seq-btn" id="sq1" style="background:linear-gradient(135deg,#ff3366,#ff6b35)" onclick="sqClick(1)"><span class="seq-num" id="sn1"></span>🔶</button>
+      <button class="seq-btn" id="sq2" style="background:linear-gradient(135deg,#00c851,#7fff6b)" onclick="sqClick(2)"><span class="seq-num" id="sn2"></span>🟢</button>
+      <button class="seq-btn" id="sq3" style="background:linear-gradient(135deg,#a855f7,#ff6bff)" onclick="sqClick(3)"><span class="seq-num" id="sn3"></span>🟣</button>
+    </div>
+    <div id="seq-fb" style="text-align:center;font-size:0.82rem;min-height:22px;margin-top:8px"></div>
+    <button id="seq-replay-btn" onclick="replaySeq()" style="
+      display:none; width:100%; margin-top:14px; padding:13px;
+      border-radius:14px; border:1.5px solid rgba(255,215,0,0.5);
+      background:rgba(255,215,0,0.1); color:#ffd700;
+      cursor:pointer; font-family:'Russo One',sans-serif;
+      font-size:0.85rem; font-weight:700; letter-spacing:0.05em;
+      transition: all 0.2s; -webkit-tap-highlight-color:transparent">
+      🔁 Показать ещё раз
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════ GAME 4: PATTERNS ═══════════════ -->
+<div class="screen hidden" id="s-pattern">
+  <div class="wrap">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div>
+        <div class="t-label">Испытание 4 · Аналитика</div>
+        <div class="t-title">Найди закономерность</div>
+      </div>
+      <div class="badge">📐 <span id="pat-score">0</span>/5</div>
+    </div>
+    <div class="prog-wrap" style="margin-bottom:14px"><div class="prog-fill" id="pat-prog" style="width:0%"></div></div>
+    <p class="t-sub" style="text-align:center;margin-bottom:12px">Какой элемент продолжает ряд?</p>
+    <div id="pat-question" style="text-align:center;margin:12px 0"></div>
+    <div id="pat-answers" class="pattern-answers"></div>
+    <div id="pat-feedback" style="text-align:center;font-size:0.82rem;min-height:20px;margin-top:10px"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ GAME 5: INTEREST MAP ═══════════════ -->
+<div class="screen hidden" id="s-interest">
+  <div class="wrap">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div>
+        <div class="t-label">Испытание 5 · Выбор</div>
+        <div class="t-title">Твои предпочтения</div>
+      </div>
+      <div style="font-family:'Russo One';font-size:0.8rem;color:var(--muted)"><span id="int-q">1</span>/12</div>
+    </div>
+    <div class="prog-wrap" style="margin-bottom:16px"><div class="prog-fill" id="int-prog" style="width:0%"></div></div>
+    <div class="interest-scene" id="int-scene"></div>
+    <div class="interest-opts" id="int-opts"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ GAME 6: PERSONALITY ═══════════════ -->
+<div class="screen hidden" id="s-person">
+  <div class="wrap">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div>
+        <div class="t-label">Испытание 6 · Стиль</div>
+        <div class="t-title">Твои решения</div>
+      </div>
+      <div style="font-family:'Russo One';font-size:0.8rem;color:var(--muted)"><span id="per-q">1</span>/10</div>
+    </div>
+    <div class="prog-wrap" style="margin-bottom:16px"><div class="prog-fill" id="per-prog" style="width:0%"></div></div>
+    <div class="card" style="margin-bottom:14px;padding:18px">
+      <div id="per-ctx" style="font-size:0.78rem;color:var(--accent);margin-bottom:6px;font-weight:600"></div>
+      <div id="per-q-text" style="font-size:0.95rem;font-weight:600;line-height:1.5"></div>
+    </div>
+    <div id="per-opts" style="display:flex;flex-direction:column;gap:9px"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ GAME 7: INFO SPEED ═══════════════ -->
+<div class="screen hidden" id="s-speed">
+  <div class="wrap">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div>
+        <div class="t-label">Испытание 7 · Скорость</div>
+        <div class="t-title">Быстрые решения</div>
+      </div>
+      <div class="timer-wrap" style="width:60px;height:60px">
+        <svg width="60" height="60" viewBox="0 0 60 60">
+          <circle class="t-ring-bg" cx="30" cy="30" r="25"/>
+          <circle class="t-ring" id="spd-ring" cx="30" cy="30" r="25" style="stroke-dasharray:157"/>
+        </svg>
+        <div class="t-num" id="spd-time" style="font-size:0.95rem">8</div>
+      </div>
+    </div>
+    <div class="prog-wrap" style="margin-bottom:14px"><div class="prog-fill" id="spd-prog" style="width:0%"></div></div>
+    <div id="spd-card" class="speed-card"></div>
+    <div id="spd-answers" class="speed-answers"></div>
+    <div id="spd-feedback" style="text-align:center;font-size:0.82rem;min-height:20px;margin-top:10px"></div>
+  </div>
+</div>
+
+
+<!-- ═══════════════ GAME 8: MISSION & VALUES ═══════════════ -->
+<div class="screen hidden" id="s-mission">
+  <div class="wrap">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div>
+        <div class="t-label">Испытание 8 · Смыслы</div>
+        <div class="t-title">Ценности и миссия</div>
+      </div>
+      <div style="font-family:'Russo One';font-size:0.8rem;color:var(--muted)"><span id="mis-q">1</span>/8</div>
+    </div>
+    <div class="prog-wrap" style="margin-bottom:16px"><div class="prog-fill" id="mis-prog" style="width:0%"></div></div>
+    <div class="interest-scene" id="mis-scene"></div>
+    <div id="mis-opts" style="display:flex;flex-direction:column;gap:9px"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ GAME 9: ENERGY & LIFESTYLE ═══════════════ -->
+<div class="screen hidden" id="s-energy">
+  <div class="wrap">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div>
+        <div class="t-label">Испытание 9 · Стиль жизни</div>
+        <div class="t-title">Энергия и ресурс</div>
+      </div>
+      <div style="font-family:'Russo One';font-size:0.8rem;color:var(--muted)"><span id="en-q">1</span>/8</div>
+    </div>
+    <div class="prog-wrap" style="margin-bottom:16px"><div class="prog-fill" id="en-prog" style="width:0%"></div></div>
+    <div class="card" style="margin-bottom:14px;padding:18px">
+      <div id="en-q-text" style="font-size:0.95rem;font-weight:600;line-height:1.5"></div>
+    </div>
+    <div id="en-opts" style="display:flex;flex-direction:column;gap:9px"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ PROCESSING ═══════════════ -->
+<div class="screen hidden" id="s-proc">
+  <div class="wrap" style="text-align:center">
+    <div class="spin" style="margin-bottom:28px"></div>
+    <div class="t-title" id="proc-title" style="margin-bottom:10px"></div>
+    <p class="t-sub" id="proc-sub" style="margin-bottom:20px"></p>
+    <div class="prog-wrap" style="max-width:260px;margin:0 auto">
+      <div class="prog-fill" id="proc-prog" style="width:0%"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ RESULTS ═══════════════ -->
+<div class="screen hidden" id="s-results">
+  <div class="wrap" style="padding-bottom:50px">
+
+    <!-- Header -->
+    <div style="text-align:center;margin-bottom:24px">
+      <div class="t-label" style="margin-bottom:6px">ТВОЙ ПРОФИЛЬ</div>
+      <div id="res-icon" style="font-size:4.5rem;animation:float 5s ease-in-out infinite;display:block;margin-bottom:6px"></div>
+      <div class="t-hero" style="font-size:clamp(1.8rem,6vw,3rem)" id="res-archetype"></div>
+      <p class="t-sub" id="res-desc" style="margin-top:10px;max-width:420px;margin-left:auto;margin-right:auto"></p>
+    </div>
+
+    <!-- Abilities -->
+    <div class="card" style="margin-bottom:14px">
+      <div class="t-label" style="margin-bottom:14px">ПРОФИЛЬ СПОСОБНОСТЕЙ</div>
+      <div id="res-bars"></div>
+    </div>
+
+    <!-- Top professions -->
+    <div class="card" style="margin-bottom:14px">
+      <div class="t-label" style="margin-bottom:14px">🎯 ГДЕ ТЫ РАСКРОЕШЬСЯ</div>
+      <div id="res-profs"></div>
+    </div>
+
+    <!-- Avoid -->
+    <div class="card" style="margin-bottom:14px;border-color:rgba(255,79,107,0.2)">
+      <div class="t-label" style="margin-bottom:12px;color:var(--danger)">⚠️ ВЕКТОРЫ НЕ ДЛЯ ТЕБЯ</div>
+      <div id="res-avoid" style="font-size:0.88rem;line-height:1.6"></div>
+    </div>
+
+    <!-- Career style -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="t-label" style="margin-bottom:12px">⚓ КАРЬЕРНЫЙ СТИЛЬ</div>
+      <div id="res-anchor" style="font-size:0.88rem;line-height:1.6"></div>
+    </div>
+
+    <!-- Mission -->
+    <div class="card" style="margin-bottom:14px;border-color:rgba(255,215,0,0.2)">
+      <div class="t-label" style="margin-bottom:12px;color:var(--gold)">🌟 ТВОЯ ЖИЗНЕННАЯ МИССИЯ</div>
+      <div id="res-mission" style="font-size:0.88rem;line-height:1.6"></div>
+    </div>
+
+    <!-- Energy -->
+    <div class="card" style="margin-bottom:14px;border-color:rgba(127,255,107,0.2)">
+      <div class="t-label" style="margin-bottom:12px;color:var(--accent3)">⚡ ЭНЕРГИЯ И ВОССТАНОВЛЕНИЕ</div>
+      <div id="res-energy" style="font-size:0.88rem;line-height:1.6"></div>
+    </div>
+
+    <!-- Tracker CTA -->
+    <div class="card" style="margin-bottom:14px;background:linear-gradient(135deg,rgba(168,85,247,0.08),rgba(0,200,255,0.06));border-color:rgba(168,85,247,0.3)">
+      <div class="t-label" style="margin-bottom:10px;color:var(--purple)">🎯 СЛЕДУЮЩИЙ ШАГ</div>
+      <div style="font-size:0.9rem;font-weight:700;margin-bottom:8px">Разбор отчёта с трекером</div>
+      <p style="font-size:0.82rem;color:var(--muted);line-height:1.6;margin-bottom:14px">
+        Отчёт — это карта. Но карта работает только тогда, когда рядом есть тот, кто помогает её читать.
+        Трекер подсветит твои слепые зоны, поможет перевести выводы в конкретные действия и ускорит изменения в 2–3 раза.
+      </p>
+      <a href="https://t.me/Alex_protiv" target="_blank" style="text-decoration:none">
+        <button class="btn btn-glow" style="width:100%;background:linear-gradient(135deg,var(--purple),#0080ff)">
+          💬 Записаться к трекеру @Alex_protiv
+        </button>
+      </a>
+    </div>
+
+    <!-- PDF Paywall -->
+    <div class="paywall-box" style="margin-bottom:16px">
+      <div style="font-size:2rem;margin-bottom:8px">📄</div>
+      <div class="t-title" style="margin-bottom:6px;font-size:1.1rem">Полный PDF-отчёт</div>
+      <p class="t-sub" style="margin-bottom:14px;font-size:0.82rem">
+        Детальная интерпретация · Топ-10 профессий с % совпадения · Антипрофессии · Карьерная карта · Рекомендации по развитию
+      </p>
+      <div class="price-tag" style="margin-bottom:12px" id="price-display">299 ₽</div>
+      <button class="btn btn-danger" onclick="handlePDFRequest()" style="width:100%;margin-bottom:10px" id="pdf-btn">
+        📥 Получить полный отчёт
+      </button>
+      <div style="font-size:0.72rem;color:var(--muted)" id="payment-hint">
+        Оплата через СБП · Мгновенная выдача PDF
+      </div>
+    </div>
+
+    <button class="btn btn-ghost" onclick="restartApp()" style="width:100%">🔄 Пройти заново</button>
+  </div>
+</div>
+
+<!-- ═══════════════ PAYMENT ═══════════════ -->
+<div class="screen hidden" id="s-pay">
+  <div class="wrap" style="text-align:center">
+    <div style="font-size:3rem;margin-bottom:16px">💳</div>
+    <div class="t-title" style="margin-bottom:10px">Оплата отчёта</div>
+    <p class="t-sub" style="margin-bottom:24px">Переведи <strong style="color:var(--gold)" id="pay-amount">299 ₽</strong> на карту / СБП</p>
+
+    <div class="card" style="margin-bottom:16px;text-align:left">
+      <div class="t-label" style="margin-bottom:12px">РЕКВИЗИТЫ ДЛЯ ОПЛАТЫ</div>
+      <div style="font-size:0.88rem;line-height:2">
+        <div>📱 <strong>СБП:</strong> <span id="sbp-number" style="color:var(--accent);font-family:'Russo One'"></span></div>
+        <div>💳 <strong>ЮMoney:</strong> <span id="ymoney-number" style="color:var(--accent);font-family:'Russo One'"></span></div>
+        <div>👤 <strong>Получатель:</strong> <span id="pay-name" style="color:var(--muted)"></span></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px;background:rgba(0,200,255,0.05);border-color:rgba(0,200,255,0.2)">
+      <p style="font-size:0.84rem;line-height:1.6">
+        После перевода нажми кнопку ниже — PDF автоматически скачается на твоё устройство.<br>
+        <span style="color:var(--muted);font-size:0.75rem">На доверии: мы видим платежи и отслеживаем. Жулики нам не нужны 😊</span>
+      </p>
+    </div>
+
+    <button class="btn btn-glow" onclick="generateAndDownloadPDF()" style="width:100%;margin-bottom:10px;animation:glow 2s ease infinite">
+      ✅ Я оплатил(а) — скачать PDF
+    </button>
+    <button class="btn btn-ghost" onclick="showScreen('s-results')" style="width:100%;font-size:0.76rem;padding:10px">← Назад к результатам</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  КОНФИГУРАЦИЯ — вставь свои реквизиты здесь
+// ═══════════════════════════════════════════════════
+const CONFIG = {
+  sbp:    '+7 952 185-18-53',       // номер телефона для СБП
+  ymoney: '2204 1201 2215 0804',   // номер карты ЮMoney
+  owner:  'Абайдулин Александр Анатольевич', // имя получателя
+  price:  299,                    // цена в рублях
+  appName: 'ПроФильтр'
+};
+
+// ═══════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════
+const ST = {
+  name: '',
+  phase: 0,
+  scores: {
+    memory:0, spatial:0, logic:0, pattern:0, speed:0,
+    R:0,I:0,A:0,S:0,E:0,C:0,
+    openness:0, conscientiousness:0, extraversion:0, agreeableness:0, neuroticism:0,
+    ac_competence:0, ac_management:0, ac_autonomy:0, ac_stability:0, ac_service:0, ac_challenge:0,
+    // Interest map spheres (Golomshtok-inspired)
+    tech:0, science:0, art:0, social:0, business:0, nature:0,
+    sport:0, pedagogy:0, medicine:0, law:0, finance:0, media:0,
+    engineering:0, it:0, culture:0, cooking:0, military:0, design:0,
+    ecology:0, research:0,
+    // Mission & values
+    mission_impact:0, mission_freedom:0, mission_mastery:0, mission_harmony:0,
+    mission_creation:0, mission_service:0,
+    // Energy & lifestyle
+    energy_physical:0, energy_social:0, energy_solo:0,
+    stress_active:0, stress_reflective:0,
+    sport_pref:'', nutrition_pref:'', schedule_pref:''
+  }
+};
+
+// ═══════════════════════════════════════════════════
+//  UTILITIES
+// ═══════════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+  const el = document.getElementById(id);
+  if(el) { el.classList.remove('hidden'); el.scrollTop=0; }
+}
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+function notif(msg, type='ok'){
+  const el=document.getElementById('notif');
+  el.textContent=msg; el.className=`notif ${type} show`;
+  setTimeout(()=>el.classList.remove('show'),2600);
+}
+function rnd(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+function shuffle(arr){ return [...arr].sort(()=>Math.random()-0.5); }
+
+// ═══════════════════════════════════════════════════
+//  PARTICLES
+// ═══════════════════════════════════════════════════
+(function spawnParticles(){
+  const colors=['rgba(0,200,255,','rgba(168,85,247,','rgba(255,107,53,','rgba(79,255,176,'];
+  for(let i=0;i<18;i++){
+    const p=document.createElement('div');
+    p.className='particle';
+    const size=rnd(2,6);
+    const color=colors[rnd(0,colors.length-1)];
+    p.style.cssText=`
+      width:${size}px;height:${size}px;
+      left:${rnd(0,100)}%;
+      background:${color}0.7);
+      animation-duration:${rnd(8,20)}s;
+      animation-delay:${rnd(0,15)}s;
+    `;
+    document.body.appendChild(p);
+  }
+})();
+
+// ═══════════════════════════════════════════════════
+//  ONBOARDING
+// ═══════════════════════════════════════════════════
+document.getElementById('inp-name').addEventListener('focus',function(){this.style.borderColor='var(--accent)'});
+document.getElementById('inp-name').addEventListener('blur',function(){this.style.borderColor='var(--border)'});
+document.getElementById('inp-name').addEventListener('keydown',e=>{if(e.key==='Enter')confirmName()});
+
+function confirmName(){
+  const n=document.getElementById('inp-name').value.trim();
+  if(!n){ notif('Введи своё имя!','err'); return; }
+  ST.name=n;
+  ST.phase=0;
+  showIntro(0);
+}
+
+// ═══════════════════════════════════════════════════
+//  GAME PHASES CONFIG
+// ═══════════════════════════════════════════════════
+const PHASES = [
+  { id:'mem',      icon:'🧠', label:'Испытание 1 из 7',  title:'Концентрация и память',         desc:'Серия карточек перед тобой. Запомни, где они лежат, и найди все пары. Тренируй фокус.' },
+  { id:'spatial',  icon:'🔷', label:'Испытание 2 из 7',  title:'Пространственное мышление',     desc:'Перед тобой фигуры. Определи, какая из предложенных является поворотом или отражением исходной.' },
+  { id:'seq',      icon:'🔢', label:'Испытание 3 из 7',  title:'Рабочая память и порядок',      desc:'Запоминай последовательности нажатий. С каждым уровнем ряд становится длиннее.' },
+  { id:'pattern',  icon:'📐', label:'Испытание 4 из 7',  title:'Аналитическое мышление',        desc:'Найди закономерность в ряду и выбери элемент, который его продолжает.' },
+  { id:'interest', icon:'🗺️', label:'Испытание 5 из 7',  title:'Карта предпочтений',            desc:'Представь ситуацию и выбери тот вариант, который тебе ближе всего. Нет плохих ответов.' },
+  { id:'person',   icon:'🌟', label:'Испытание 6 из 7',  title:'Стиль принятия решений',        desc:'Опиши своё поведение в разных ситуациях. Будь честен — только так получишь точный результат.' },
+  { id:'speed',    icon:'⚡', label:'Испытание 7 из 9',  title:'Скорость обработки информации', desc:'Быстро выбирай ответ на каждый вопрос. Важны и скорость, и точность.' },
+  { id:'mission',  icon:'🌟', label:'Испытание 8 из 9',  title:'Ценности и смыслы',             desc:'Серия ситуаций о том, что для тебя важно в жизни. Отвечай искренне — нет правильных или неправильных вариантов.' },
+  { id:'energy',   icon:'⚡', label:'Испытание 9 из 9',  title:'Энергия и стиль жизни',         desc:'Несколько вопросов о твоём ритме жизни, восстановлении и отношениях. Помогут составить полную картину.' },
+];
+
+function showIntro(idx){
+  const p=PHASES[idx];
+  document.getElementById('intro-icon').textContent=p.icon;
+  document.getElementById('intro-block').textContent=p.label;
+  document.getElementById('intro-title').textContent=p.title;
+  document.getElementById('intro-desc').textContent=p.desc;
+  document.getElementById('intro-progress').style.width=((idx/PHASES.length)*100)+'%';
+  document.getElementById('intro-step').textContent=`Пройдено ${idx} из ${PHASES.length} испытаний`;
+  showScreen('s-intro');
+}
+
+function launchCurrentGame(){
+  const id=PHASES[ST.phase].id;
+  showScreen('s-'+id);
+  if(id==='mem')      initMem();
+  else if(id==='spatial') initSpatial();
+  else if(id==='seq')  initSeq();
+  else if(id==='pattern') initPattern();
+  else if(id==='interest') initInterest();
+  else if(id==='person') initPerson();
+  else if(id==='speed')   initSpeed();
+  else if(id==='mission') initMission();
+  else if(id==='energy')  initEnergy();
+}
+
+function nextPhase(){
+  ST.phase++;
+  if(ST.phase>=PHASES.length) startProcessing();
+  else showIntro(ST.phase);
+}
+
+// ═══════════════════════════════════════════════════
+//  GAME 1: MEMORY MATCH
+// ═══════════════════════════════════════════════════
+const MEM_EMOJIS=['🔮','⚡','🌊','🎯','🦋','💎','🚀','🌙'];
+let memS={};
+
+function initMem(){
+  const pairs=shuffle([...MEM_EMOJIS,...MEM_EMOJIS]);
+  memS={cards:pairs.map((e,i)=>({e,id:i,face:false,matched:false})),
+        flipped:[],matched:0,timer:null,time:60};
+  document.getElementById('mem-found').textContent=0;
+  document.getElementById('mem-total').textContent=MEM_EMOJIS.length;
+  const g=document.getElementById('mem-grid');
+  g.innerHTML='';
+  memS.cards.forEach((_,i)=>{
+    const c=document.createElement('div');
+    c.className='mem-cell face-down'; c.id='mc'+i;
+    c.onclick=()=>flipMem(i);
+    g.appendChild(c);
+  });
+  memTickStart();
+}
+
+function memTickStart(){
+  memUpdateTimer(60);
+  memS.timer=setInterval(()=>{
+    memS.time--;
+    memUpdateTimer(memS.time);
+    if(memS.time<=0){clearInterval(memS.timer);finishMem();}
+  },1000);
+}
+
+function memUpdateTimer(t){
+  const pct=t/60;
+  document.getElementById('mem-ring').style.strokeDashoffset=200*(1-pct);
+  document.getElementById('mem-ring').style.stroke=t>20?'var(--accent)':t>10?'var(--gold)':'var(--danger)';
+  document.getElementById('mem-time').textContent=t;
+  document.getElementById('mem-prog').style.width=(memS.matched/MEM_EMOJIS.length*100)+'%';
+}
+
+function flipMem(i){
+  const c=memS.cards[i];
+  if(c.face||c.matched||memS.flipped.length>=2) return;
+  c.face=true;
+  const el=document.getElementById('mc'+i);
+  el.textContent=c.e; el.className='mem-cell revealed';
+  memS.flipped.push(i);
+  if(memS.flipped.length===2){
+    const[a,b]=memS.flipped;
+    if(memS.cards[a].e===memS.cards[b].e){
+      memS.cards[a].matched=memS.cards[b].matched=true;
+      document.getElementById('mc'+a).className='mem-cell matched';
+      document.getElementById('mc'+b).className='mem-cell matched';
+      memS.matched++;
+      memS.flipped=[];
+      document.getElementById('mem-found').textContent=memS.matched;
+      if(memS.matched===MEM_EMOJIS.length){clearInterval(memS.timer);finishMem();}
+    } else {
+      setTimeout(()=>{
+        memS.cards[a].face=memS.cards[b].face=false;
+        ['mc'+a,'mc'+b].forEach(id=>{
+          const el=document.getElementById(id);
+          el.className='mem-cell face-down'; el.textContent='';
+        });
+        memS.flipped=[];
+      },850);
+    }
+  }
+}
+
+function finishMem(){
+  const pct=memS.matched/MEM_EMOJIS.length;
+  ST.scores.memory=Math.round(pct*100+(memS.time/60)*30);
+  notif(pct===1?'🎉 Все пары найдены!':'⏱ Время вышло!', pct===1?'ok':'err');
+  setTimeout(nextPhase,1400);
+}
+
+// ═══════════════════════════════════════════════════
+//  GAME 2: SPATIAL REASONING
+// ═══════════════════════════════════════════════════
+// Grid-based shapes: 4x4 grids, show original and 4 variants (3 wrong, 1 correct = rotated)
+const SHAPES=[
+  // Each shape: array of [row,col] filled cells in a 4x4 grid
+  [[0,0],[0,1],[1,1],[2,1],[2,2]],
+  [[0,2],[1,0],[1,1],[1,2],[2,0]],
+  [[0,0],[0,1],[0,2],[1,2],[2,2]],
+  [[0,1],[1,0],[1,1],[2,1],[2,2]],
+  [[0,0],[1,0],[1,1],[1,2],[2,2]],
+  [[0,2],[1,2],[1,1],[1,0],[2,0]],
+];
+
+let spS={q:0,correct:0,total:6};
+
+function rotate90(cells){
+  // rotate clockwise: [r,c] → [c, 3-r]
+  return cells.map(([r,c])=>[c,3-r]);
+}
+
+function mirrorH(cells){
+  return cells.map(([r,c])=>[r,3-c]);
+}
+
+function renderMiniGrid(cells, size=34){
+  const div=document.createElement('div');
+  div.style.cssText=`display:grid;grid-template-columns:repeat(4,${size}px);gap:3px`;
+  for(let r=0;r<4;r++) for(let c=0;c<4;c++){
+    const cell=document.createElement('div');
+    const filled=cells.some(([rr,cc])=>rr===r&&cc===c);
+    cell.style.cssText=`width:${size}px;height:${size}px;border-radius:5px;border:1px solid rgba(255,255,255,0.08);
+      background:${filled?'var(--accent)':'rgba(255,255,255,0.03)'};
+      ${filled?'box-shadow:0 0 8px rgba(0,200,255,0.5)':''}`;
+    div.appendChild(cell);
+  }
+  return div;
+}
+
+function initSpatial(){
+  spS={q:0,correct:0,total:6};
+  showSpatialQ();
+}
+
+function showSpatialQ(){
+  if(spS.q>=spS.total){finishSpatial();return;}
+  document.getElementById('sp-score').textContent=spS.correct;
+  document.getElementById('sp-prog').style.width=(spS.q/spS.total*100)+'%';
+  document.getElementById('sp-feedback').textContent='';
+
+  const shape=SHAPES[spS.q % SHAPES.length];
+  // correct answer: rotate once
+  const rotations=[1,2,3,4];
+  const correctRot=rnd(1,3);
+  let correct=shape;
+  for(let i=0;i<correctRot;i++) correct=rotate90(correct);
+
+  // wrong answers: mirror + different rotations
+  const wrong1=mirrorH(shape);
+  const wrong2=rotate90(mirrorH(shape));
+  let wrong3=shape;
+  for(let i=0;i<(correctRot===2?1:2);i++) wrong3=rotate90(wrong3);
+  // make sure wrong3 != correct
+  const allOpts=shuffle([
+    {cells:correct,isCorrect:true},
+    {cells:wrong1,isCorrect:false},
+    {cells:wrong2,isCorrect:false},
+    {cells:wrong3,isCorrect:false},
+  ]);
+
+  // Show original
+  const qDiv=document.getElementById('sp-question');
+  qDiv.innerHTML='';
+  const origWrap=document.createElement('div');
+  origWrap.style.cssText='display:inline-block;padding:12px;background:var(--s2);border:1px solid var(--border);border-radius:12px;margin-bottom:4px';
+  origWrap.appendChild(renderMiniGrid(shape,32));
+  const origLabel=document.createElement('div');
+  origLabel.style.cssText='font-size:0.7rem;color:var(--muted);text-align:center;margin-top:4px';
+  origLabel.textContent='Исходная фигура';
+  origWrap.appendChild(origLabel);
+  qDiv.appendChild(origWrap);
+
+  // Show options
+  const ansDiv=document.getElementById('sp-answers');
+  ansDiv.innerHTML='';
+  ansDiv.className='spatial-opts';
+  allOpts.forEach((opt,i)=>{
+    const btn=document.createElement('div');
+    btn.className='spatial-opt';
+    const grid=renderMiniGrid(opt.cells,28);
+    btn.appendChild(grid);
+    const lbl=document.createElement('div');
+    lbl.className='opt-label';
+    lbl.textContent=['А','Б','В','Г'][i];
+    btn.appendChild(lbl);
+    btn.onclick=()=>answerSpatial(btn, opt.isCorrect, allOpts);
+    ansDiv.appendChild(btn);
+  });
+}
+
+function answerSpatial(btn, correct, allOpts){
+  // disable all
+  document.querySelectorAll('#sp-answers .spatial-opt').forEach(b=>b.onclick=null);
+  if(correct){
+    btn.classList.add('correct');
+    spS.correct++;
+    document.getElementById('sp-feedback').style.color='var(--success)';
+    document.getElementById('sp-feedback').textContent='✅ Верно!';
+  } else {
+    btn.classList.add('wrong');
+    document.getElementById('sp-feedback').style.color='var(--danger)';
+    document.getElementById('sp-feedback').textContent='❌ Не совсем...';
+    // show correct
+    const allBtns=document.querySelectorAll('#sp-answers .spatial-opt');
+    allOpts.forEach((o,i)=>{if(o.isCorrect) allBtns[i].classList.add('correct');});
+  }
+  spS.q++;
+  setTimeout(showSpatialQ, 1200);
+}
+
+function finishSpatial(){
+  ST.scores.spatial=Math.round(spS.correct/spS.total*100);
+  notif(`🔷 Пространство: ${spS.correct}/${spS.total}`, 'ok');
+  setTimeout(nextPhase,1200);
+}
+
+// ═══════════════════════════════════════════════════
+//  GAME 3: SEQUENCE
+// ═══════════════════════════════════════════════════
+let seqS={seq:[],player:[],lv:1,showing:false,maxLv:6};
+
+function initSeq(){
+  seqS={seq:[],player:[],lv:1,showing:false,maxLv:6,replayUsed:0};
+  document.getElementById('seq-lv').textContent=1;
+  document.getElementById('seq-fb').textContent='';
+  document.getElementById('seq-replay-btn').style.display='none';
+  setSqBtns(false);
+  generateSeq();
+}
+function generateSeq(){
+  seqS.player=[];
+  seqS.seq=Array.from({length:seqS.lv+1},()=>rnd(0,3));
+  document.getElementById('seq-msg').textContent='👀 Запоминай последовательность...';
+  document.getElementById('seq-fb').textContent='';
+  document.getElementById('seq-replay-btn').style.display='none';
+  setSqBtns(false);
+  // небольшая пауза перед показом
+  setTimeout(()=>showSeqAnim(), 600);
+}
+async function showSeqAnim(){
+  seqS.showing=true;
+  // скорость: медленнее на ранних уровнях, быстрее на поздних
+  const onTime  = Math.max(350, 750 - seqS.lv * 50);
+  const offTime = Math.max(100, 280 - seqS.lv * 25);
+  const gapTime = Math.max(80,  220 - seqS.lv * 18);
+
+  // Сначала сбрасываем все счётчики
+  [0,1,2,3].forEach(j=>{
+    const sn=document.getElementById('sn'+j);
+    if(sn){sn.textContent='';sn.classList.remove('visible');}
+  });
+
+  // Показываем последовательность с яркой вспышкой + номером
+  for(let step=0; step<seqS.seq.length; step++){
+    const i = seqS.seq[step];
+    await sleep(gapTime);
+    const btn = document.getElementById('sq'+i);
+    const sn  = document.getElementById('sn'+i);
+
+    // Показываем номер шага над кнопкой
+    if(sn){
+      sn.textContent = step+1;
+      sn.classList.add('visible');
+    }
+
+    btn.classList.add('flash');
+    await sleep(onTime);
+    btn.classList.remove('flash');
+    await sleep(offTime);
+  }
+
+  seqS.showing=false;
+  document.getElementById('seq-msg').textContent='👆 Повтори в том же порядке!';
+  setSqBtns(true);
+
+  // Показываем кнопку «повторить»
+  document.getElementById('seq-replay-btn').style.display='block';
+  document.getElementById('seq-replay-btn').disabled=false;
+  document.getElementById('seq-replay-btn').style.opacity='1';
+  document.getElementById('seq-replay-btn').textContent='🔁 Показать ещё раз';
+}
+function replaySeq(){
+  if(seqS.showing) return;
+  const btn=document.getElementById('seq-replay-btn');
+  btn.disabled=true; btn.style.opacity='0.4';
+  btn.textContent='⏳ Смотри...';
+  setSqBtns(false);
+  seqS.player=[];
+  // сбрасываем счётчики
+  [0,1,2,3].forEach(j=>{
+    const sn=document.getElementById('sn'+j);
+    if(sn){sn.textContent='';sn.classList.remove('visible');}
+  });
+  document.getElementById('seq-msg').textContent='👀 Смотри ещё раз...';
+  showSeqAnim();
+}
+function setSqBtns(on){
+  [0,1,2,3].forEach(i=>{
+    const b=document.getElementById('sq'+i);
+    b.disabled=!on; b.style.opacity=on?1:0.45;
+  });
+}
+function sqClick(i){
+  if(seqS.showing) return;
+  // При первом нажатии убираем все счётчики
+  if(seqS.player.length===0){
+    [0,1,2,3].forEach(j=>{
+      const sn=document.getElementById('sn'+j);
+      if(sn){sn.textContent='';sn.classList.remove('visible');}
+    });
+    document.getElementById('seq-replay-btn').style.display='none';
+  }
+  const btn=document.getElementById('sq'+i);
+  btn.classList.add('flash');
+  setTimeout(()=>btn.classList.remove('flash'),220);
+  seqS.player.push(i);
+  const pos=seqS.player.length-1;
+  if(seqS.player[pos]!==seqS.seq[pos]){
+    document.getElementById('seq-fb').style.color='var(--danger)';
+    document.getElementById('seq-fb').textContent='❌ Ошибка! Переходим дальше...';
+    ST.scores.logic=Math.round((seqS.lv-1)/seqS.maxLv*100);
+    setSqBtns(false);
+    document.getElementById('seq-replay-btn').style.display='none';
+    // вспышка всех кнопок красным
+    [0,1,2,3].forEach(j=>{
+      const b=document.getElementById('sq'+j);
+      b.style.boxShadow='0 0 20px 4px rgba(255,50,50,0.7)';
+      setTimeout(()=>b.style.boxShadow='',700);
+    });
+    setTimeout(nextPhase,2000);
+    return;
+  }
+  if(seqS.player.length===seqS.seq.length){
+    document.getElementById('seq-fb').style.color='var(--success)';
+    document.getElementById('seq-fb').textContent='✅ Правильно!';
+    document.getElementById('seq-replay-btn').style.display='none';
+    // вспышка всех кнопок зелёным
+    [0,1,2,3].forEach(j=>{
+      const b=document.getElementById('sq'+j);
+      b.style.boxShadow='0 0 20px 4px rgba(0,200,120,0.8)';
+      setTimeout(()=>b.style.boxShadow='',700);
+    });
+    seqS.lv++;
+    document.getElementById('seq-lv').textContent=seqS.lv;
+    if(seqS.lv>seqS.maxLv){
+      ST.scores.logic=100;
+      notif('🏆 Максимальный уровень!','ok');
+      setTimeout(nextPhase,1400);
+    } else {
+      setTimeout(generateSeq,1200);
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  GAME 4: PATTERN LOGIC
+// ═══════════════════════════════════════════════════
+const PATTERN_QS=[
+  {row:['🔵','🔵','🔺','🔵','🔵','❓'],ans:['🔺','🔵','🔶','🟣'],correct:0, rule:'Каждые 3 элемента — треугольник'},
+  {row:['🌟','🌙','🌟','🌙','🌟','❓'],ans:['🌙','🌟','⭐','💫'],correct:0, rule:'Чередование'},
+  {row:['1️⃣','2️⃣','4️⃣','8️⃣','❓'],ans:['🔟','1️⃣6️⃣','6️⃣','3️⃣'],correct:1, rule:'Удвоение'},
+  {row:['🟥','🟧','🟨','🟩','🟦','❓'],ans:['🟪','🟫','🟥','⬛'],correct:0, rule:'Цвета радуги'},
+  {row:['⬆️','➡️','⬇️','⬅️','⬆️','❓'],ans:['➡️','⬇️','⬅️','⬆️'],correct:0, rule:'Стороны света'},
+];
+
+let patS={q:0,correct:0};
+
+function initPattern(){
+  patS={q:0,correct:0};
+  showPatternQ();
+}
+
+function showPatternQ(){
+  if(patS.q>=PATTERN_QS.length){finishPattern();return;}
+  const qdata=PATTERN_QS[patS.q];
+  document.getElementById('pat-score').textContent=patS.correct;
+  document.getElementById('pat-prog').style.width=(patS.q/PATTERN_QS.length*100)+'%';
+  document.getElementById('pat-feedback').textContent='';
+
+  // Render row
+  const qDiv=document.getElementById('pat-question');
+  qDiv.innerHTML='';
+  const rowDiv=document.createElement('div');
+  rowDiv.className='pattern-row';
+  qdata.row.forEach(sym=>{
+    const cell=document.createElement('div');
+    cell.className=sym==='❓'?'pattern-shape unknown':'pattern-shape';
+    cell.textContent=sym;
+    rowDiv.appendChild(cell);
+  });
+  qDiv.appendChild(rowDiv);
+
+  // Render answers (shuffle but track correct)
+  const shuffled=shuffle(qdata.ans.map((a,i)=>({a,isCorrect:i===qdata.correct})));
+  const ansDiv=document.getElementById('pat-answers');
+  ansDiv.innerHTML='';
+  shuffled.forEach(opt=>{
+    const btn=document.createElement('div');
+    btn.className='pattern-ans';
+    btn.textContent=opt.a;
+    btn.onclick=()=>answerPattern(btn, opt.isCorrect, shuffled);
+    ansDiv.appendChild(btn);
+  });
+}
+
+function answerPattern(btn, correct, shuffled){
+  document.querySelectorAll('#pat-answers .pattern-ans').forEach(b=>b.onclick=null);
+  if(correct){
+    btn.classList.add('correct-ans');
+    patS.correct++;
+    document.getElementById('pat-feedback').style.color='var(--success)';
+    document.getElementById('pat-feedback').textContent='✅ Верно!';
+  } else {
+    btn.classList.add('wrong-ans');
+    document.getElementById('pat-feedback').style.color='var(--danger)';
+    document.getElementById('pat-feedback').textContent='❌ Не совсем...';
+    const allBtns=document.querySelectorAll('#pat-answers .pattern-ans');
+    shuffled.forEach((o,i)=>{if(o.isCorrect) allBtns[i].classList.add('correct-ans');});
+  }
+  patS.q++;
+  setTimeout(showPatternQ,1200);
+}
+
+function finishPattern(){
+  ST.scores.pattern=Math.round(patS.correct/PATTERN_QS.length*100);
+  notif(`📐 Аналитика: ${patS.correct}/${PATTERN_QS.length}`,'ok');
+  setTimeout(nextPhase,1200);
+}
+
+// ═══════════════════════════════════════════════════
+//  GAME 5: INTEREST MAP (Golomshtok-inspired, 20 spheres)
+// ═══════════════════════════════════════════════════
+const INT_QS=[
+  {scene:'🏢 Ты в офисе крупной компании. Перед тобой выбор задачи на этот день.',
+   opts:[
+    {txt:'⚙️ Разобраться с технической проблемой сервера',spheres:{tech:2,it:2}},
+    {txt:'🤝 Провести переговоры с партнёрами',spheres:{business:2,social:1}},
+    {txt:'📊 Проанализировать данные продаж',spheres:{science:2,finance:1}},
+    {txt:'🎨 Создать новый дизайн презентации',spheres:{art:2,design:2}},
+  ]},
+  {scene:'🌴 Неожиданно появился свободный день. Ты выбираешь занятие.',
+   opts:[
+    {txt:'🔬 Пойти в музей науки / планетарий',spheres:{science:2,research:1}},
+    {txt:'🎭 Сходить на спектакль или выставку',spheres:{art:2,culture:2}},
+    {txt:'🏋️ Потренироваться или поиграть в спорт',spheres:{sport:2}},
+    {txt:'🌿 Выехать на природу / в лес',spheres:{nature:2,ecology:1}},
+  ]},
+  {scene:'🏫 Тебе предложили вести кружок для детей. Ты выбираешь тему.',
+   opts:[
+    {txt:'💻 Программирование и роботы',spheres:{it:2,tech:1}},
+    {txt:'🎨 Рисование и творчество',spheres:{art:2,design:1}},
+    {txt:'🔭 Астрономия и физика',spheres:{science:2,research:2}},
+    {txt:'🌱 Экология и природа',spheres:{ecology:2,nature:2}},
+  ]},
+  {scene:'📰 Тебе предложили написать статью на любую тему.',
+   opts:[
+    {txt:'⚖️ О законах и правах граждан',spheres:{law:2}},
+    {txt:'💊 О медицине и здоровом образе жизни',spheres:{medicine:2}},
+    {txt:'📈 О финансах и инвестициях',spheres:{finance:2,business:1}},
+    {txt:'🎬 О кино и культурных событиях',spheres:{media:2,culture:2}},
+  ]},
+  {scene:'🚒 В твоём районе нужны волонтёры. Ты выбираешь направление.',
+   opts:[
+    {txt:'🏥 Помогать в больнице / хосписе',spheres:{medicine:2,social:2}},
+    {txt:'📚 Учить детей из неблагополучных семей',spheres:{pedagogy:2,social:1}},
+    {txt:'🌳 Убирать мусор и сажать деревья',spheres:{ecology:2,nature:1}},
+    {txt:'🍲 Готовить еду для нуждающихся',spheres:{social:2,cooking:2}},
+  ]},
+  {scene:'🎓 Тебе дают грант на любой исследовательский проект.',
+   opts:[
+    {txt:'🔬 Разработать новое лекарство',spheres:{medicine:2,science:2,research:2}},
+    {txt:'🤖 Создать систему искусственного интеллекта',spheres:{it:2,research:2}},
+    {txt:'🏛️ Исследовать историю древних цивилизаций',spheres:{culture:2,research:2}},
+    {txt:'⚡ Придумать новый источник энергии',spheres:{engineering:2,science:1,ecology:1}},
+  ]},
+  {scene:'💼 Предложили работу в трёх компаниях. Ты выбираешь...',
+   opts:[
+    {txt:'🏗️ Строительная компания — ведёшь большие проекты',spheres:{engineering:2,business:1}},
+    {txt:'📡 Медиахолдинг — создаёшь контент',spheres:{media:2,art:1}},
+    {txt:'⚖️ Юридическая фирма — защищаешь клиентов',spheres:{law:2}},
+    {txt:'🍽️ Ресторанный бизнес — управляешь кухней',spheres:{cooking:2,business:1}},
+  ]},
+  {scene:'🏠 Ты решаешь потратить вечер с пользой. Что выбираешь?',
+   opts:[
+    {txt:'📖 Учить иностранный язык',spheres:{culture:1,pedagogy:1,research:1}},
+    {txt:'🏋️ Тренировка — спорт это жизнь',spheres:{sport:2}},
+    {txt:'💻 Делать свой проект / стартап',spheres:{it:1,business:2}},
+    {txt:'🎵 Слушать музыку и читать про искусство',spheres:{art:2,culture:2}},
+  ]},
+  {scene:'🌐 Тебя зовут на международный форум. Ты едешь как...',
+   opts:[
+    {txt:'🔬 Учёный — делаешь доклад об открытии',spheres:{science:2,research:2}},
+    {txt:'🎤 Спикер — рассказываешь о бизнесе',spheres:{business:2,media:1}},
+    {txt:'⚕️ Врач — участвуешь в медконференции',spheres:{medicine:2}},
+    {txt:'🪖 Представитель силовых структур',spheres:{military:2}},
+  ]},
+  {scene:'🎯 Тебя спрашивают: что для тебя важнее всего в работе?',
+   opts:[
+    {txt:'💡 Создавать что-то новое и уникальное',spheres:{art:1,research:2,it:1}},
+    {txt:'🤝 Помогать людям решать их проблемы',spheres:{social:2,pedagogy:1,medicine:1}},
+    {txt:'📊 Работать с данными и числами',spheres:{science:2,finance:1}},
+    {txt:'🏆 Побеждать и добиваться высоких результатов',spheres:{sport:1,business:2,military:1}},
+  ]},
+  {scene:'🏡 Ты переехал в новый город. Первым делом ты...',
+   opts:[
+    {txt:'🏛️ Идёшь изучать музеи и архитектуру',spheres:{culture:2,art:1}},
+    {txt:'🌲 Ищешь парки и природные места',spheres:{nature:2,ecology:1,sport:1}},
+    {txt:'💻 Находишь коворкинг и начинаешь работать',spheres:{it:1,business:1,research:1}},
+    {txt:'🤝 Знакомишься с местным сообществом',spheres:{social:2,pedagogy:1}},
+  ]},
+  {scene:'🚀 Тебе предложили поучаствовать в экспедиции. Ты выбираешь.',
+   opts:[
+    {txt:'🌋 Геологическая экспедиция — изучать породы',spheres:{science:2,nature:2,research:1}},
+    {txt:'🏥 Медицинская миссия в другой стране',spheres:{medicine:2,social:2}},
+    {txt:'📸 Фотоэкспедиция по заповедникам',spheres:{art:2,ecology:2,nature:1}},
+    {txt:'🛰️ Участие в военно-научной операции',spheres:{military:2,science:1}},
+  ]},
+];
+
+let intS={q:0};
+
+function initInterest(){ intS={q:0}; showInterestQ(); }
+
+function showInterestQ(){
+  if(intS.q>=INT_QS.length){finishInterest();return;}
+  const qd=INT_QS[intS.q];
+  document.getElementById('int-q').textContent=intS.q+1;
+  document.getElementById('int-prog').style.width=(intS.q/INT_QS.length*100)+'%';
+  document.getElementById('int-scene').textContent=qd.scene;
+  const od=document.getElementById('int-opts');
+  od.innerHTML='';
+  shuffle(qd.opts).forEach(opt=>{
+    const btn=document.createElement('button');
+    btn.className='opt-btn';
+    btn.innerHTML=`<span class="opt-text">${opt.txt}</span>`;
+    btn.onclick=()=>{
+      Object.entries(opt.spheres).forEach(([k,v])=>ST.scores[k]=(ST.scores[k]||0)+v);
+      intS.q++;
+      showInterestQ();
+    };
+    od.appendChild(btn);
+  });
+}
+
+function finishInterest(){
+  notif('🗺️ Карта интересов построена!','ok');
+  setTimeout(nextPhase,1200);
+}
+
+// ═══════════════════════════════════════════════════
+//  GAME 6: PERSONALITY (Big Five + Career Anchors)
+// ═══════════════════════════════════════════════════
+const PER_QS=[
+  {ctx:'📋 Рабочая ситуация',q:'Получаешь срочное задание без чётких инструкций.',opts:[
+    {txt:'📝 Сразу составлю план и буду следовать ему шаг за шагом',traits:{conscientiousness:2}},
+    {txt:'⚡ Начну действовать и разберусь по ходу',traits:{openness:2,extraversion:1}},
+    {txt:'🤝 Спрошу коллег — вместе быстрее разберёмся',traits:{agreeableness:2,extraversion:1}},
+    {txt:'😤 Почувствую раздражение, но справлюсь',traits:{neuroticism:1}},
+  ]},
+  {ctx:'👥 Командный проект',q:'Тебя неожиданно назначили лидером команды.',opts:[
+    {txt:'🦁 Беру управление — я давно хотел этого',traits:{ac_management:2,extraversion:2}},
+    {txt:'🤔 Соглашусь, только если я реально компетентен',traits:{ac_competence:2,conscientiousness:1}},
+    {txt:'🌿 Главное чтобы проект помогал людям',traits:{ac_service:2,agreeableness:1}},
+    {txt:'😅 Лучше я буду отличным исполнителем',traits:{ac_competence:1}},
+  ]},
+  {ctx:'💼 Карьерный выбор',q:'Две оферты: стабильный корпорат и рискованный стартап.',opts:[
+    {txt:'🏦 Стабильность важнее — выбираю корпорат',traits:{ac_stability:2}},
+    {txt:'🚀 Стартап — риск ради большого шанса',traits:{ac_challenge:2,openness:2}},
+    {txt:'🕊️ Главное — работать в своём ритме',traits:{ac_autonomy:2}},
+    {txt:'💚 Смотрю на ценности компании',traits:{ac_service:1,agreeableness:1}},
+  ]},
+  {ctx:'🆕 Первый день',q:'Первый день в новом коллективе.',opts:[
+    {txt:'🗣️ Сразу знакомлюсь со всеми',traits:{extraversion:2}},
+    {txt:'👀 Наблюдаю, потом включаюсь',traits:{openness:1,conscientiousness:1}},
+    {txt:'💼 Сразу погружаюсь в задачи',traits:{conscientiousness:2,ac_competence:1}},
+    {txt:'🤝 Нахожу одного близкого по духу',traits:{agreeableness:2}},
+  ]},
+  {ctx:'⚡ Конфликт',q:'Коллега публично не согласился с твоим решением.',opts:[
+    {txt:'🗣️ Аргументирую свою позицию при всех',traits:{extraversion:2}},
+    {txt:'📊 Предлагаю рассмотреть данные',traits:{conscientiousness:2,openness:1}},
+    {txt:'🤝 Ищем компромисс — оба правы по-своему',traits:{agreeableness:2}},
+    {txt:'😰 Переживаю, но промолчу',traits:{neuroticism:2}},
+  ]},
+  {ctx:'🎯 Мотивация',q:'Что тебя заряжает в работе сильнее всего?',opts:[
+    {txt:'🏆 Стать лучшим профессионалом в своей нише',traits:{ac_competence:2}},
+    {txt:'👑 Управлять командой и видеть результат',traits:{ac_management:2,extraversion:1}},
+    {txt:'🕊️ Работать без начальников, на себя',traits:{ac_autonomy:2}},
+    {txt:'💚 Знать, что моя работа помогает другим',traits:{ac_service:2,agreeableness:1}},
+  ]},
+  {ctx:'🌱 Обучение',q:'Как ты предпочитаешь осваивать новое?',opts:[
+    {txt:'📚 Структурированный курс — теория, потом практика',traits:{conscientiousness:2}},
+    {txt:'🔥 Сразу в бой — разберусь по ходу',traits:{openness:2,extraversion:1}},
+    {txt:'👨‍🏫 Нахожу наставника, учусь у лучших',traits:{agreeableness:1,ac_competence:1}},
+    {txt:'🔭 Экспериментирую сам, придумываю свой путь',traits:{ac_challenge:2,openness:2}},
+  ]},
+  {ctx:'🔄 Рутина',q:'Тебе достался монотонный, но важный участок работы.',opts:[
+    {txt:'✅ Выполняю качественно — важна надёжность',traits:{conscientiousness:2,ac_stability:2}},
+    {txt:'😪 Ищу способ автоматизировать и сбежать',traits:{openness:2,it:1}},
+    {txt:'🎯 Делаю хорошо — профессионализм важен всегда',traits:{ac_competence:2}},
+    {txt:'🤔 Договорюсь о ротации с командой',traits:{agreeableness:1,extraversion:1}},
+  ]},
+  {ctx:'🌍 Масштаб',q:'Какой масштаб задачи тебя вдохновляет?',opts:[
+    {txt:'🌐 Создать что-то, что изменит мир',traits:{openness:2,ac_challenge:2}},
+    {txt:'🏘️ Помочь своему городу и соседям',traits:{ac_service:2,agreeableness:2}},
+    {txt:'🏢 Выстроить успешную компанию',traits:{ac_management:2,business:1}},
+    {txt:'⚙️ Стать непревзойдённым мастером своего дела',traits:{ac_competence:2}},
+  ]},
+  {ctx:'😰 Стресс',q:'Ты сильно перегрузился. Как восстанавливаешься?',opts:[
+    {txt:'🏃 Спорт и физическая активность',traits:{sport:1,openness:1}},
+    {txt:'🎨 Творчество — рисую, пишу, создаю',traits:{art:2,openness:2}},
+    {txt:'🤝 Общение с близкими людьми',traits:{social:2,agreeableness:2,extraversion:1}},
+    {txt:'📱 Уединение — мне нужна тишина',traits:{ac_autonomy:1,neuroticism:1}},
+  ]},
+];
+
+let perS={q:0};
+function initPerson(){ perS={q:0}; showPersonQ(); }
+function showPersonQ(){
+  if(perS.q>=PER_QS.length){finishPerson();return;}
+  const qd=PER_QS[perS.q];
+  document.getElementById('per-q').textContent=perS.q+1;
+  document.getElementById('per-prog').style.width=(perS.q/PER_QS.length*100)+'%';
+  document.getElementById('per-ctx').textContent=qd.ctx;
+  document.getElementById('per-q-text').textContent=qd.q;
+  const od=document.getElementById('per-opts');
+  od.innerHTML='';
+  shuffle(qd.opts).forEach(opt=>{
+    const btn=document.createElement('button');
+    btn.className='opt-btn';
+    btn.innerHTML=`<span class="opt-text">${opt.txt}</span>`;
+    btn.onclick=()=>{
+      Object.entries(opt.traits).forEach(([k,v])=>ST.scores[k]=(ST.scores[k]||0)+v);
+      perS.q++;
+      showPersonQ();
+    };
+    od.appendChild(btn);
+  });
+}
+function finishPerson(){
+  notif('🌟 Стиль определён!','ok');
+  setTimeout(nextPhase,1200);
+}
+
+// ═══════════════════════════════════════════════════
+//  GAME 7: INFORMATION SPEED
+// ═══════════════════════════════════════════════════
+const SPD_QS=[
+  {q:'Что быстрее вращается?',opts:['🌍 Земля','🌙 Луна','☀️ Солнце','💫 Нейтронная звезда'],correct:3,trait:{research:1}},
+  {q:'Назначение нейрона?',opts:['Передавать сигналы','Хранить кислород','Вырабатывать энергию','Фильтровать кровь'],correct:0,trait:{science:1,medicine:1}},
+  {q:'Что такое MVP в бизнесе?',opts:['Самый ценный игрок','Минимальный продукт','Максимальная прибыль','Маркетинговый план'],correct:1,trait:{business:2}},
+  {q:'HTML — это...',opts:['Язык программирования','Язык разметки','База данных','Операционная система'],correct:1,trait:{it:2}},
+  {q:'Гомеостаз — это...',opts:['Болезнь','Баланс организма','Вид гормона','Тип клетки'],correct:1,trait:{medicine:1,science:1}},
+  {q:'Что такое дивиденды?',opts:['Налог','Долг компании','Прибыль акционерам','Кредит'],correct:2,trait:{finance:2}},
+  {q:'Фотосинтез происходит в...',opts:['Корне','Стволе','Листе','Цветке'],correct:2,trait:{nature:1,science:1}},
+  {q:'RGB расшифровывается как...',opts:['Red Green Blue','Real Graphic Base','Render Gradient Base','Round Grid Block'],correct:0,trait:{design:1,it:1}},
+];
+
+let spdS={q:0,correct:0,timer:null,time:8};
+
+function initSpeed(){ spdS={q:0,correct:0}; showSpdQ(); }
+
+function showSpdQ(){
+  if(spdS.q>=SPD_QS.length){finishSpeed();return;}
+  if(spdS.timer) clearInterval(spdS.timer);
+  spdS.time=8;
+  const qd=SPD_QS[spdS.q];
+  document.getElementById('spd-prog').style.width=(spdS.q/SPD_QS.length*100)+'%';
+  document.getElementById('spd-feedback').textContent='';
+  document.getElementById('spd-card').textContent=qd.q;
+
+  const ad=document.getElementById('spd-answers');
+  ad.innerHTML='';
+  qd.opts.forEach((opt,i)=>{
+    const btn=document.createElement('div');
+    btn.className='speed-ans';
+    btn.textContent=opt;
+    btn.onclick=()=>answerSpd(btn, i===qd.correct, qd);
+    ad.appendChild(btn);
+  });
+
+  updateSpdTimer(8);
+  spdS.timer=setInterval(()=>{
+    spdS.time--;
+    updateSpdTimer(spdS.time);
+    if(spdS.time<=0){
+      clearInterval(spdS.timer);
+      document.getElementById('spd-feedback').textContent='⏱ Время вышло!';
+      document.getElementById('spd-feedback').style.color='var(--muted)';
+      spdS.q++;
+      setTimeout(showSpdQ,1000);
+    }
+  },1000);
+}
+
+function updateSpdTimer(t){
+  const circ=document.getElementById('spd-ring');
+  const pct=t/8;
+  circ.style.strokeDashoffset=157*(1-pct);
+  circ.style.stroke=t>4?'var(--accent)':t>2?'var(--gold)':'var(--danger)';
+  document.getElementById('spd-time').textContent=t;
+}
+
+function answerSpd(btn, correct, qd){
+  clearInterval(spdS.timer);
+  document.querySelectorAll('#spd-answers .speed-ans').forEach(b=>b.onclick=null);
+  if(correct){
+    btn.classList.add('correct');
+    spdS.correct++;
+    Object.entries(qd.trait).forEach(([k,v])=>ST.scores[k]=(ST.scores[k]||0)+v);
+    document.getElementById('spd-feedback').style.color='var(--success)';
+    document.getElementById('spd-feedback').textContent='✅ Верно!';
+  } else {
+    btn.classList.add('wrong');
+    document.getElementById('spd-feedback').style.color='var(--danger)';
+    document.getElementById('spd-feedback').textContent='❌ Неверно';
+    // show correct
+    document.querySelectorAll('#spd-answers .speed-ans').forEach((b,i)=>{
+      if(i===SPD_QS[spdS.q].correct) b.classList.add('correct');
+    });
+  }
+  spdS.q++;
+  setTimeout(showSpdQ,1100);
+}
+
+function finishSpeed(){
+  ST.scores.speed=Math.round(spdS.correct/SPD_QS.length*100);
+  notif(`⚡ Скорость: ${spdS.correct}/${SPD_QS.length}`,'ok');
+  setTimeout(nextPhase,1200);
+}
+
+
+// ═══════════════════════════════════════════════════
+//  GAME 8: MISSION & VALUES
+// ═══════════════════════════════════════════════════
+const MISSION_QS = [
+  {scene:'🌅 Утро. Ты думаешь о том, ради чего встаёшь каждый день.',
+   opts:[
+    {txt:'💡 Создавать что-то новое — продукт, идею, решение',mission:{mission_creation:2,mission_mastery:1}},
+    {txt:'🤝 Помогать людям становиться лучше',mission:{mission_service:2,mission_harmony:1}},
+    {txt:'🏆 Достигать результатов и признания',mission:{mission_impact:2}},
+    {txt:'🕊️ Жить в своём ритме, без навязанных рамок',mission:{mission_freedom:2}},
+  ]},
+  {scene:'📖 Книга, которая изменила твою жизнь — о чём она?',
+   opts:[
+    {txt:'🚀 О людях, которые изменили мир своими действиями',mission:{mission_impact:2,mission_creation:1}},
+    {txt:'🧘 О внутреннем покое, смысле и самопознании',mission:{mission_harmony:2,mission_mastery:1}},
+    {txt:'💼 О бизнесе, деньгах и стратегии успеха',mission:{mission_impact:1,mission_freedom:1}},
+    {txt:'❤️ О любви, семье и человеческих отношениях',mission:{mission_service:2,mission_harmony:1}},
+  ]},
+  {scene:'🎯 Ты на пороге важного выбора. Что перевешивает?',
+   opts:[
+    {txt:'💰 Финансовая отдача и стабильность',mission:{mission_freedom:1}},
+    {txt:'🌍 Масштаб влияния на мир',mission:{mission_impact:2}},
+    {txt:'❤️ Польза конкретным людям рядом',mission:{mission_service:2}},
+    {txt:'🎨 Возможность самовыражения',mission:{mission_creation:2,mission_mastery:1}},
+  ]},
+  {scene:'⚰️ Через 30 лет на твоих похоронах говорят о тебе. Что важнее всего?',
+   opts:[
+    {txt:'🏛️ "Он построил то, что будет жить после него"',mission:{mission_creation:2,mission_impact:2}},
+    {txt:'💚 "Он всегда был рядом, когда нужен"',mission:{mission_service:2,mission_harmony:1}},
+    {txt:'🌟 "Он был собой — ни на кого не похожим"',mission:{mission_freedom:2,mission_mastery:1}},
+    {txt:'🎓 "Он передал опыт и знания людям"',mission:{mission_service:2,mission_mastery:2}},
+  ]},
+  {scene:'💸 Тебе дали миллион рублей без условий. Куда направишь?',
+   opts:[
+    {txt:'📚 Образование и развитие своих навыков',mission:{mission_mastery:2}},
+    {txt:'🚀 Запущу своё дело или проект',mission:{mission_creation:2,mission_impact:1}},
+    {txt:'🌍 Помогу тем, кто в этом нуждается',mission:{mission_service:2}},
+    {txt:'✈️ Свобода — путешествия и впечатления',mission:{mission_freedom:2}},
+  ]},
+  {scene:'🌙 Перед сном ты чувствуешь, что день прошёл не зря, когда...',
+   opts:[
+    {txt:'✅ Сделал то, что запланировал',mission:{mission_mastery:2}},
+    {txt:'😊 Кому-то стало лучше благодаря мне',mission:{mission_service:2,mission_harmony:1}},
+    {txt:'💡 Придумал что-то новое или решил сложную задачу',mission:{mission_creation:2}},
+    {txt:'🕊️ Был собой и никому ничего не должен',mission:{mission_freedom:2}},
+  ]},
+  {scene:'👥 Идеальная команда для тебя — это...',
+   opts:[
+    {txt:'🎯 Амбициозные люди, нацеленные на результат',mission:{mission_impact:2}},
+    {txt:'🤗 Близкие по духу, с кем комфортно',mission:{mission_harmony:2,mission_service:1}},
+    {txt:'🔬 Профессионалы, у которых можно учиться',mission:{mission_mastery:2}},
+    {txt:'🕊️ Люди, которые не лезут в мои дела',mission:{mission_freedom:2}},
+  ]},
+  {scene:'🔮 Если бы ты знал, что не провалишься — что бы сделал?',
+   opts:[
+    {txt:'📢 Вышел бы на большую аудиторию с важной идеей',mission:{mission_impact:2,mission_creation:1}},
+    {txt:'🏫 Создал бы школу или систему обучения',mission:{mission_service:2,mission_mastery:1}},
+    {txt:'🌿 Ушёл бы в сторону и строил жизнь сам',mission:{mission_freedom:2}},
+    {txt:'🎨 Создал бы произведение, которое останется',mission:{mission_creation:2,mission_mastery:1}},
+  ]},
+];
+
+let misS = {q:0};
+function initMission(){ misS={q:0}; showMissionQ(); }
+function showMissionQ(){
+  if(misS.q>=MISSION_QS.length){finishMission();return;}
+  const qd=MISSION_QS[misS.q];
+  document.getElementById('mis-q').textContent=misS.q+1;
+  document.getElementById('mis-prog').style.width=(misS.q/MISSION_QS.length*100)+'%';
+  document.getElementById('mis-scene').textContent=qd.scene;
+  const od=document.getElementById('mis-opts');
+  od.innerHTML='';
+  shuffle(qd.opts).forEach(opt=>{
+    const btn=document.createElement('button');
+    btn.className='opt-btn';
+    btn.innerHTML=`<span class="opt-text">${opt.txt}</span>`;
+    btn.onclick=()=>{
+      Object.entries(opt.mission).forEach(([k,v])=>ST.scores[k]=(ST.scores[k]||0)+v);
+      misS.q++;
+      showMissionQ();
+    };
+    od.appendChild(btn);
+  });
+}
+function finishMission(){
+  notif('🌟 Ценности определены!','ok');
+  setTimeout(nextPhase,1200);
+}
+
+// ═══════════════════════════════════════════════════
+//  GAME 9: ENERGY & LIFESTYLE
+// ═══════════════════════════════════════════════════
+const ENERGY_QS=[
+  {q:'Как ты восстанавливаешься после напряжённого дня?',opts:[
+    {txt:'🏃 Физическая активность — спорт, прогулка, тренировка',e:{energy_physical:2,stress_active:2}},
+    {txt:'🤝 Общение с близкими, живые разговоры',e:{energy_social:2}},
+    {txt:'📚 Тишина, чтение, уединение',e:{energy_solo:2,stress_reflective:1}},
+    {txt:'🎮 Переключиться — кино, игры, хобби',e:{energy_solo:1,stress_reflective:1}},
+  ]},
+  {q:'Твой идеальный рабочий режим?',opts:[
+    {txt:'🌅 Ранний подъём — утром голова свежая',e:{schedule_early:1}},
+    {txt:'🌙 Ночная продуктивность — вечером лучше думается',e:{schedule_night:1}},
+    {txt:'☀️ Стандартный день — с 9 до 18',e:{schedule_standard:1}},
+    {txt:'🔄 Гибко — зависит от задачи и настроения',e:{schedule_flex:1}},
+  ]},
+  {q:'Как ты обычно реагируешь на сильный стресс?',opts:[
+    {txt:'💪 Мобилизуюсь — стресс даёт мне энергию',e:{stress_active:2,energy_physical:1}},
+    {txt:'🤝 Ищу поддержку у людей',e:{energy_social:2}},
+    {txt:'🧘 Ухожу в себя, анализирую',e:{stress_reflective:2,energy_solo:1}},
+    {txt:'😤 Сложно — теряю фокус и энергию',e:{stress_reactive:1}},
+  ]},
+  {q:'Какой спорт или активность тебе ближе?',opts:[
+    {txt:'🏊 Плавание, бег, велосипед — цикличные нагрузки',e:{sport_endurance:1,energy_physical:2}},
+    {txt:'🏋️ Силовые тренировки, единоборства',e:{sport_strength:1,energy_physical:2}},
+    {txt:'🧘 Йога, медитация, цигун',e:{sport_mindful:1,stress_reflective:1}},
+    {txt:'⚽ Командные игры, соревнования',e:{sport_team:1,energy_social:1}},
+  ]},
+  {q:'Что даёт тебе больше всего энергии на работе?',opts:[
+    {txt:'🏆 Видеть результат и прогресс',e:{energy_physical:1,mission_impact:1}},
+    {txt:'🤝 Работать с людьми, которых уважаю',e:{energy_social:2,mission_harmony:1}},
+    {txt:'💡 Решать сложные, нестандартные задачи',e:{energy_solo:1,mission_mastery:2}},
+    {txt:'🕊️ Полная свобода в методах и времени',e:{mission_freedom:2}},
+  ]},
+  {q:'Как ты относишься к питанию?',opts:[
+    {txt:'🥗 Осознанно слежу — это влияет на энергию',e:{nutrition_conscious:1,energy_physical:1}},
+    {txt:'🍽️ Ем то, что нравится, без строгих правил',e:{nutrition_intuitive:1}},
+    {txt:'⚡ Практично — не трачу время на готовку',e:{nutrition_practical:1}},
+    {txt:'🌿 Интересуюсь здоровым образом жизни',e:{nutrition_health:1,energy_physical:1}},
+  ]},
+  {q:'Что для тебя важнее в отношениях?',opts:[
+    {txt:'🤝 Надёжность и стабильность',e:{mission_harmony:2,ac_stability:1}},
+    {txt:'💡 Развитие и рост вместе',e:{mission_mastery:1,mission_creation:1}},
+    {txt:'❤️ Эмоциональная близость и понимание',e:{mission_service:1,energy_social:2}},
+    {txt:'🕊️ Уважение к личному пространству',e:{mission_freedom:2,energy_solo:1}},
+  ]},
+  {q:'Как ты принимаешь важные решения?',opts:[
+    {txt:'📊 Анализирую данные и факты',e:{stress_reflective:2,energy_solo:1}},
+    {txt:'❤️ Слушаю интуицию и чувства',e:{mission_harmony:1,energy_social:1}},
+    {txt:'🤝 Советуюсь с людьми, которым доверяю',e:{energy_social:2,mission_service:1}},
+    {txt:'⚡ Действую быстро — промедление хуже',e:{stress_active:2,mission_impact:1}},
+  ]},
+];
+
+let enS={q:0};
+function initEnergy(){ enS={q:0}; showEnergyQ(); }
+function showEnergyQ(){
+  if(enS.q>=ENERGY_QS.length){finishEnergy();return;}
+  const qd=ENERGY_QS[enS.q];
+  document.getElementById('en-q').textContent=enS.q+1;
+  document.getElementById('en-prog').style.width=(enS.q/ENERGY_QS.length*100)+'%';
+  document.getElementById('en-q-text').textContent=qd.q;
+  const od=document.getElementById('en-opts');
+  od.innerHTML='';
+  shuffle(qd.opts).forEach(opt=>{
+    const btn=document.createElement('button');
+    btn.className='opt-btn';
+    btn.innerHTML=`<span class="opt-text">${opt.txt}</span>`;
+    btn.onclick=()=>{
+      Object.entries(opt.e).forEach(([k,v])=>ST.scores[k]=(ST.scores[k]||0)+v);
+      enS.q++;
+      showEnergyQ();
+    };
+    od.appendChild(btn);
+  });
+}
+function finishEnergy(){
+  notif('⚡ Профиль энергии готов!','ok');
+  setTimeout(nextPhase,1200);
+}
+
+// ═══════════════════════════════════════════════════
+//  PROCESSING
+// ═══════════════════════════════════════════════════
+const PROC_STEPS=[
+  'Обрабатываем когнитивный профиль...',
+  'Строим карту интересов...',
+  'Анализируем стиль принятия решений...',
+  'Определяем карьерный вектор...',
+  'Подбираем профессии...',
+  'Формируем персональный профиль...',
+  'Готово! Формируем результаты...',
+];
+
+async function startProcessing(){
+  showScreen('s-proc');
+  for(let i=0;i<PROC_STEPS.length;i++){
+    document.getElementById('proc-title').textContent=PROC_STEPS[i];
+    document.getElementById('proc-sub').textContent=`Шаг ${i+1} из ${PROC_STEPS.length}`;
+    document.getElementById('proc-prog').style.width=((i+1)/PROC_STEPS.length*100)+'%';
+    await sleep(600);
+  }
+  computeAndShowResults();
+}
+
+// ═══════════════════════════════════════════════════
+//  RESULT COMPUTATION
+// ═══════════════════════════════════════════════════
+let RES={};
+
+const PROFESSIONS=[
+  // IT и технологии
+  {e:'💻',n:'Разработчик ПО',                  pos:['it','science','research'],         neg:['social','cooking'],     desc:'Программирование, системная архитектура'},
+  {e:'🛡️',n:'Специалист кибербезопасности',    pos:['it','research','military'],         neg:['art','pedagogy'],       desc:'IT-безопасность, защита данных'},
+  {e:'🤖',n:'AI/ML инженер',                   pos:['it','science','research'],          neg:['art','cooking'],        desc:'Машинное обучение, нейросети'},
+  {e:'🎮',n:'Геймдизайнер',                    pos:['it','art','design'],                neg:['medicine','law'],       desc:'Разработка игр, нарративный дизайн'},
+  {e:'📱',n:'UX/UI дизайнер',                  pos:['design','art','it'],                neg:['military','nature'],    desc:'Интерфейсы, пользовательский опыт'},
+  {e:'🌐',n:'DevOps / Системный администратор',pos:['it','tech','research'],             neg:['social','art'],         desc:'Инфраструктура, автоматизация, облака'},
+  {e:'📊',n:'Data Scientist / Аналитик данных',pos:['science','it','finance'],           neg:['art','cooking'],        desc:'Большие данные, статистика, визуализация'},
+  {e:'🔧',n:'Технический писатель',             pos:['it','research','media'],            neg:['sport','military'],     desc:'Документация, техническая коммуникация'},
+  // Наука и исследования
+  {e:'🔬',n:'Учёный-исследователь',            pos:['science','research','nature'],      neg:['business','cooking'],   desc:'Наука, R&D, лабораторная работа'},
+  {e:'🧬',n:'Биотехнолог / Генетик',           pos:['science','medicine','research'],    neg:['military','cooking'],   desc:'Биотехнологии, фармацевтика'},
+  {e:'🌍',n:'Географ / Геолог',                pos:['nature','science','research'],      neg:['it','cooking'],         desc:'Полевые исследования, ресурсы Земли'},
+  {e:'🔭',n:'Астрофизик / Физик',              pos:['science','research','tech'],        neg:['social','cooking'],     desc:'Фундаментальная наука, космос'},
+  {e:'🧪',n:'Химик / Фармацевт',               pos:['science','medicine','research'],    neg:['media','sport'],        desc:'Химия, фармацевтика, лабораторные исследования'},
+  // Медицина и здоровье
+  {e:'🏥',n:'Врач / Медик',                    pos:['medicine','science','social'],      neg:['it','art'],             desc:'Здравоохранение, диагностика'},
+  {e:'🧠',n:'Психолог / Психотерапевт',        pos:['social','medicine','pedagogy'],     neg:['engineering','it'],     desc:'Ментальное здоровье, терапия'},
+  {e:'🤸',n:'Спортивный тренер / Физиотерапевт',pos:['sport','medicine','social'],       neg:['it','finance'],         desc:'Физическая реабилитация, тренинг'},
+  {e:'🧘',n:'Коуч / Трекер',                   pos:['social','pedagogy','business'],     neg:['engineering','nature'], desc:'Личностный рост, сопровождение'},
+  {e:'🌿',n:'Нутрициолог / Диетолог',          pos:['medicine','nature','social'],       neg:['it','military'],        desc:'Питание, здоровый образ жизни'},
+  // Бизнес и управление
+  {e:'🚀',n:'Предприниматель / Стартапер',     pos:['business','it','media'],            neg:['ecology','military'],   desc:'Стартапы, продукт, продажи'},
+  {e:'📋',n:'Менеджер проектов',               pos:['business','social','it'],           neg:['nature','cooking'],     desc:'Управление командами, Agile, Scrum'},
+  {e:'📊',n:'Бизнес-аналитик',                 pos:['business','science','finance'],     neg:['art','ecology'],        desc:'Стратегия, процессы, оптимизация'},
+  {e:'🏢',n:'HR-специалист',                   pos:['social','pedagogy','business'],     neg:['it','nature'],          desc:'Подбор персонала, развитие команд'},
+  {e:'📈',n:'Продуктовый менеджер',            pos:['business','it','research'],         neg:['military','cooking'],   desc:'Разработка продукта, стратегия'},
+  {e:'🤝',n:'Менеджер по продажам / B2B',      pos:['business','social','media'],        neg:['research','ecology'],   desc:'Продажи, переговоры, клиентский сервис'},
+  {e:'🌏',n:'Международный менеджер / ВЭД',    pos:['business','social','culture'],      neg:['nature','cooking'],     desc:'Внешнеэкономическая деятельность, экспорт'},
+  // Финансы и право
+  {e:'🏦',n:'Финансовый аналитик',             pos:['finance','science','business'],     neg:['art','ecology'],        desc:'Инвестиции, риски, финансовое планирование'},
+  {e:'💹',n:'Трейдер / Инвестиционный аналитик',pos:['finance','research','business'],   neg:['social','cooking'],     desc:'Рынки, портфели, активы'},
+  {e:'⚖️',n:'Юрист / Адвокат',                 pos:['law','business','social'],          neg:['nature','cooking'],     desc:'Право, корпоративные споры, защита'},
+  {e:'🧾',n:'Аудитор / Бухгалтер',             pos:['finance','law','science'],          neg:['art','sport'],          desc:'Учёт, налоги, финансовый контроль'},
+  {e:'🏠',n:'Риелтор / Девелопер',             pos:['business','social','law'],          neg:['research','ecology'],   desc:'Недвижимость, инвестиции в объекты'},
+  // Творчество и медиа
+  {e:'🎨',n:'Дизайнер / Художник',             pos:['art','design','culture'],           neg:['military','law'],       desc:'Визуальные коммуникации, бренд'},
+  {e:'🎬',n:'Режиссёр / Продюсер',             pos:['media','art','culture'],            neg:['science','law'],        desc:'Кино, видео, контент-продакшн'},
+  {e:'✍️',n:'Копирайтер / Контент-мейкер',     pos:['media','art','social'],             neg:['engineering','military'],desc:'Тексты, SMM, контент-стратегия'},
+  {e:'🎵',n:'Музыкант / Саунд-дизайнер',      pos:['art','culture','design'],           neg:['military','finance'],   desc:'Музыка, звук, аудиопроизводство'},
+  {e:'📸',n:'Фотограф / Видеограф',            pos:['art','media','design'],             neg:['law','military'],       desc:'Съёмка, обработка, визуал'},
+  {e:'🌐',n:'Журналист / Редактор',            pos:['media','culture','social'],         neg:['engineering','finance'], desc:'СМИ, публикации, репортажи'},
+  {e:'📣',n:'PR-менеджер / Маркетолог',        pos:['media','business','social'],        neg:['research','military'],  desc:'Реклама, продвижение, коммуникации'},
+  {e:'🎭',n:'Актёр / Шоумен',                  pos:['art','social','culture'],           neg:['research','engineering'],desc:'Театр, кино, публичные выступления'},
+  // Образование и наставничество
+  {e:'👩‍🏫',n:'Преподаватель / Педагог',         pos:['pedagogy','social','culture'],      neg:['engineering','military'],desc:'Образование, школа, университет'},
+  {e:'🎓',n:'Методолог / Разработчик курсов',  pos:['pedagogy','research','it'],         neg:['military','cooking'],   desc:'E-learning, учебные программы'},
+  {e:'🧑‍🏫',n:'Бизнес-тренер / Фасилитатор',    pos:['pedagogy','business','social'],     neg:['nature','engineering'], desc:'Корпоративное обучение, тренинги'},
+  {e:'🧭',n:'Профориентолог / Карьерный консультант', pos:['pedagogy','social','research'],neg:['military','cooking'],  desc:'Карьерное консультирование, профориентация'},
+  // Инженерия и производство
+  {e:'🏗️',n:'Инженер-конструктор',             pos:['engineering','tech','science'],     neg:['art','media'],          desc:'Строительство, механика, проектирование'},
+  {e:'⚡',n:'Инженер-электронщик',              pos:['tech','engineering','science'],     neg:['social','cooking'],     desc:'Электроника, схемотехника, автоматика'},
+  {e:'🏭',n:'Технолог производства',            pos:['engineering','tech','nature'],      neg:['media','art'],          desc:'Производственные процессы, качество'},
+  {e:'🚗',n:'Инженер робототехники',            pos:['tech','engineering','research'],    neg:['social','cooking'],     desc:'Роботы, автоматизация, мехатроника'},
+  {e:'🏛️',n:'Архитектор',                       pos:['art','engineering','design'],       neg:['military','cooking'],   desc:'Проектирование зданий, градостроительство'},
+  // Природа и экология
+  {e:'🌿',n:'Эколог / Биолог',                 pos:['ecology','nature','science'],       neg:['business','media'],     desc:'Охрана природы, биоразнообразие'},
+  {e:'🌾',n:'Агроном / Агротехнолог',          pos:['nature','science','tech'],          neg:['media','law'],          desc:'Сельское хозяйство, агробизнес'},
+  {e:'🏞️',n:'Ландшафтный дизайнер',            pos:['nature','art','design'],            neg:['military','finance'],   desc:'Озеленение, проектирование пространств'},
+  // Социальная сфера и госслужба
+  {e:'🤝',n:'Социальный работник',             pos:['social','pedagogy','medicine'],     neg:['it','engineering'],     desc:'Поддержка людей, НКО, волонтёрство'},
+  {e:'🏛️',n:'Государственный служащий',         pos:['law','social','business'],          neg:['art','ecology'],        desc:'Госуправление, политика, дипломатия'},
+  {e:'🌏',n:'Переводчик / Лингвист',           pos:['culture','social','research'],      neg:['engineering','military'],desc:'Языки, перевод, межкультурная коммуникация'},
+  // Гастрономия и сервис
+  {e:'🍽️',n:'Шеф-повар / Ресторатор',          pos:['cooking','business','art'],         neg:['science','military'],   desc:'Кулинария, F&B управление'},
+  {e:'🏨',n:'Менеджер гостиничного бизнеса',   pos:['social','business','cooking'],      neg:['research','military'],  desc:'Гостеприимство, туризм, сервис'},
+  // Спорт и безопасность
+  {e:'🏆',n:'Спортивный менеджер',             pos:['sport','business','social'],        neg:['research','cooking'],   desc:'Организация соревнований, спортивный маркетинг'},
+  {e:'🪖',n:'Военный / Силовые структуры',         pos:['military','sport','law'],           neg:['art','ecology'],        desc:'Оборона, безопасность, стратегия'},
+  // Профориентация и развитие
+  {e:'🧭',n:'Профориентолог / Карьерный консультант', pos:['pedagogy','social','research'],   neg:['engineering','military'], desc:'Помощь в выборе профессии и карьерного пути'},
+  {e:'🎯',n:'Трекер / Коуч по целям',                 pos:['social','pedagogy','business'],   neg:['nature','engineering'],   desc:'Сопровождение людей к их целям'},
+  {e:'🏫',n:'Методист / Разработчик обучения',        pos:['pedagogy','research','media'],    neg:['sport','military'],       desc:'Создание образовательных программ и курсов'},
+  {e:'🎓',n:'Тьютор / Ментор',                        pos:['pedagogy','social','research'],   neg:['finance','engineering'],  desc:'Индивидуальное сопровождение в обучении'},
+  // Финансы расширенные
+  {e:'💹',n:'Трейдер / Инвестиционный аналитик',      pos:['finance','business','research'],  neg:['art','ecology'],          desc:'Торговля активами, управление портфелем'},
+  {e:'🏦',n:'Финансовый директор / CFO',               pos:['finance','business','law'],       neg:['art','ecology'],          desc:'Стратегическое финансовое управление'},
+  {e:'⚖️',n:'Медиатор / Арбитр',                     pos:['law','social','pedagogy'],        neg:['engineering','it'],       desc:'Урегулирование конфликтов и споров'},
+  {e:'🕵️',n:'Следователь / Детектив',               pos:['law','research','military'],       neg:['art','cooking'],          desc:'Расследование преступлений, криминалистика'},
+  // Медиа расширенные
+  {e:'🎬',n:'Кинорежиссёр / Продюсер',                pos:['art','media','culture'],          neg:['engineering','law'],      desc:'Создание кино и видеоконтента'},
+  {e:'🖋️',n:'Писатель / Сценарист',                  pos:['art','media','research'],         neg:['engineering','military'], desc:'Создание художественных и сценарных текстов'},
+  {e:'🎙️',n:'Ведущий / Подкастер',                   pos:['media','social','art'],           neg:['nature','engineering'],   desc:'Публичные выступления, голосовой контент'},
+  {e:'📸',n:'Фотограф / Видеограф',                   pos:['art','design','media'],           neg:['law','finance'],          desc:'Визуальный контент, репортажи'},
+  {e:'🌐',n:'SMM / Контент-менеджер',                  pos:['media','social','it'],            neg:['nature','military'],      desc:'Ведение соцсетей и контент-стратегии'},
+  // Строительство расширенные
+  {e:'🏗️',n:'Строитель / Прораб',                    pos:['engineering','tech','business'],  neg:['art','social'],           desc:'Управление строительными проектами'},
+  {e:'⚡',n:'Электротехник / Энергетик',              pos:['tech','engineering','science'],    neg:['art','social'],           desc:'Проектирование электросистем'},
+  {e:'✈️',n:'Авиационный инженер / Пилот',            pos:['tech','engineering','military'],   neg:['art','cooking'],          desc:'Авиация, аэрокосмическая отрасль'},
+  {e:'🚗',n:'Автоинженер / Конструктор',              pos:['engineering','tech','design'],     neg:['social','law'],           desc:'Разработка и совершенствование транспорта'},
+  // Сервис и гастрономия
+  {e:'🍳',n:'Шеф-повар / Кулинар',                   pos:['cooking','art','business'],        neg:['research','military'],    desc:'Высокая кухня, гастрономия'},
+  {e:'✈️',n:'Менеджер по туризму',                   pos:['social','business','culture'],    neg:['research','military'],    desc:'Организация туров и путешествий'},
+  {e:'🏨',n:'Отельер / Гостеприимство',               pos:['social','business','cooking'],    neg:['research','it'],          desc:'Управление гостиничным бизнесом'},
+  // Спорт расширенные
+  {e:'🏆',n:'Спортивный менеджер / Агент',            pos:['sport','business','social'],      neg:['research','engineering'], desc:'Управление спортивными командами и карьерами'},
+  {e:'🥊',n:'Тренер по единоборствам',                pos:['sport','military','pedagogy'],    neg:['art','finance'],          desc:'Боевые искусства, физическая подготовка'},
+  // Государство
+  {e:'🏛️',n:'Государственный служащий',              pos:['law','business','social'],        neg:['art','ecology'],          desc:'Государственное управление'},
+  {e:'🌍',n:'Дипломат / Международный эксперт',       pos:['law','social','culture'],         neg:['engineering','cooking'],  desc:'Международные отношения и дипломатия'},
+  {e:'🚒',n:'Пожарный / Спасатель МЧС',               pos:['military','sport','medicine'],    neg:['art','finance'],          desc:'Ликвидация ЧС, спасательные операции'},
+  // Экология
+  {e:'🌱',n:'Эколог / Устойчивое развитие',           pos:['ecology','nature','science'],     neg:['military','cooking'],     desc:'Охрана природы, ESG, зелёные технологии'},
+  {e:'🌊',n:'Морской биолог / Океанолог',             pos:['nature','science','research'],    neg:['it','business'],          desc:'Изучение морских экосистем'},
+  {e:'🌲',n:'Лесник / Природные ресурсы',             pos:['nature','ecology','sport'],       neg:['it','finance'],           desc:'Управление природными ресурсами'},
+];
+
+const ARCHETYPES={
+  scientist:{icon:'🔬',name:'Учёный',desc:'Твой мозг — исследовательский инструмент. Ты методично докапываешься до сути, любишь сложные вопросы и способен часами работать над одной проблемой, пока не найдёшь ответ.'},
+  creator:{icon:'🎨',name:'Творец',desc:'Мир — твой холст. Ты видишь красоту там, где другие видят обычное, и умеешь создавать уникальные вещи из ничего. Рутина тебя душит, а свежие идеи дают энергию.'},
+  connector:{icon:'🤝',name:'Коннектор',desc:'Люди тянутся к тебе. Ты умеешь слышать, понимать и объединять. Твоя сила — в отношениях: ты строишь мосты там, где другие видят стены.'},
+  builder:{icon:'🏗️',name:'Строитель',desc:'Ты мыслишь конкретно и системно. Твои руки и голова работают в синхроне. Ты предпочитаешь результаты теориям и умеешь превращать планы в реальность.'},
+  leader:{icon:'🦁',name:'Лидер',desc:'Ты рождён двигать людей вперёд. Энергия, убедительность, амбиции — твои главные инструменты. Ты не боишься неопределённости и умеешь вести команду через турбулентность.'},
+  analyst:{icon:'📊',name:'Аналитик',desc:'Данные для тебя — это язык истины. Ты видишь паттерны там, где другие видят хаос, и принимаешь решения на основе фактов. Твоя точность — конкурентное преимущество.'},
+};
+
+function computeAndShowResults(){
+  const s=ST.scores;
+  // Normalize cognitive scores (0-100)
+  const cog={
+    memory: Math.min(100, s.memory||0),
+    spatial: Math.min(100, s.spatial||0),
+    logic: Math.min(100, s.logic||0),
+    pattern: Math.min(100, s.pattern||0),
+    speed: Math.min(100, s.speed||0),
+  };
+  const avgCog=Math.round(Object.values(cog).reduce((a,b)=>a+b,0)/5);
+
+  // Big Five normalize (max ~4 per trait from 10 questions)
+  const BF_MAX=8;
+  const bf={
+    openness: Math.min(100,Math.round((s.openness||0)/BF_MAX*100)),
+    conscientiousness: Math.min(100,Math.round((s.conscientiousness||0)/BF_MAX*100)),
+    extraversion: Math.min(100,Math.round((s.extraversion||0)/BF_MAX*100)),
+    agreeableness: Math.min(100,Math.round((s.agreeableness||0)/BF_MAX*100)),
+    neuroticism: Math.max(5,Math.min(80,Math.round((s.neuroticism||0)/4*100))),
+  };
+
+  // Interest spheres (max ~4 per sphere from 12 questions)
+  const sphereKeys=['tech','science','art','social','business','nature','sport','pedagogy','medicine','law','finance','media','engineering','it','culture','cooking','military','design','ecology','research'];
+  const sphereMax=Math.max(...sphereKeys.map(k=>s[k]||0),1);
+  const spherePct={};
+  sphereKeys.forEach(k=>spherePct[k]=Math.round((s[k]||0)/sphereMax*100));
+
+  // Score professions
+  const profScores=PROFESSIONS.map(p=>{
+    let score=0;
+    p.pos.forEach(k=>score+=(spherePct[k]||0));
+    score=score/p.pos.length;
+    // cognitive bonus
+    score+=avgCog*0.15;
+    // slight randomization for realism
+    score=Math.round(Math.min(97, Math.max(35, score+rnd(-5,8))));
+    return {...p,score};
+  }).sort((a,b)=>b.score-a.score);
+
+  // Determine archetype
+  const topSpheres=sphereKeys.sort((a,b)=>(s[b]||0)-(s[a]||0)).slice(0,3);
+  let archetype;
+  if(['science','research','nature','medicine'].some(k=>topSpheres.includes(k))) archetype=ARCHETYPES.scientist;
+  else if(['art','design','culture','media'].some(k=>topSpheres.includes(k))) archetype=ARCHETYPES.creator;
+  else if(['social','pedagogy','agreeableness'].some(k=>topSpheres.includes(k)||bf[k]>60)) archetype=ARCHETYPES.connector;
+  else if(['engineering','tech','military'].some(k=>topSpheres.includes(k))) archetype=ARCHETYPES.builder;
+  else if(['business'].some(k=>topSpheres.includes(k))||(s.ac_management||0)>4) archetype=ARCHETYPES.leader;
+  else archetype=ARCHETYPES.analyst;
+
+  // Avoid professions (bottom 3 scoring)
+  const worstProfs=profScores.slice(-4).map(p=>p.n);
+
+  // Career anchor
+  const anchors={
+    ac_competence:'🏆 Профессиональная компетентность — ты хочешь быть лучшим в своём деле',
+    ac_management:'👑 Управление — тебя привлекает руководство людьми и организациями',
+    ac_autonomy:'🕊️ Автономия — свобода и независимость в работе критически важны для тебя',
+    ac_stability:'🏦 Стабильность — надёжность и предсказуемость — твои приоритеты',
+    ac_service:'💚 Служение — работа должна приносить реальную пользу людям',
+    ac_challenge:'🔥 Вызов — ты живёшь ради сложных задач и преодоления себя',
+  };
+  const topAnchor=Object.keys(anchors).reduce((a,b)=>(s[a]||0)>(s[b]||0)?a:b);
+
+  RES={cog,bf,spherePct,archetype,profScores,worstProfs,topAnchor,anchorLabel:anchors[topAnchor],topSpheres};
+
+  // Render
+  document.getElementById('res-icon').textContent=archetype.icon;
+  document.getElementById('res-archetype').textContent=archetype.name;
+  document.getElementById('res-desc').textContent=archetype.desc;
+
+  // Bars
+  const bars=[
+    {n:'Память',v:cog.memory,c:'#00c8ff'},
+    {n:'Пространство',v:cog.spatial,c:'#a855f7'},
+    {n:'Логика',v:cog.logic,c:'#7fff6b'},
+    {n:'Паттерны',v:cog.pattern,c:'#ffd700'},
+    {n:'Скорость',v:cog.speed,c:'#ff6b35'},
+    {n:'Открытость',v:bf.openness,c:'#00e5ff'},
+    {n:'Организованность',v:bf.conscientiousness,c:'#4fffb0'},
+    {n:'Экстраверсия',v:bf.extraversion,c:'#ff9d00'},
+    {n:'Доброжелательность',v:bf.agreeableness,c:'#b0ff4f'},
+  ];
+  document.getElementById('res-bars').innerHTML=bars.map(b=>`
+    <div class="res-bar">
+      <div class="res-bar-name">${b.n}</div>
+      <div class="res-bar-wrap"><div class="res-bar-fill" style="width:0%;background:${b.c}" data-val="${b.v}"></div></div>
+      <div class="res-bar-val" style="color:${b.c}">${b.v}%</div>
+    </div>
+  `).join('');
+  // Animate bars
+  setTimeout(()=>document.querySelectorAll('.res-bar-fill').forEach(el=>{
+    el.style.width=el.dataset.val+'%';
+  }),100);
+
+  // Professions — top 5 + expandable full list
+  const profHTML = (p, i) => {
+    const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+    const barColor = i<3?'#00c878':i<10?'#0096e8':'#6040d0';
+    return `<div class="prof-item" style="${i<3?'border-color:rgba(0,200,120,0.35);background:rgba(0,200,120,0.05)':''}">
+      <div class="prof-rank" style="color:${i<3?'#00c878':'var(--muted)'}">${medal||'#'+(i+1)}</div>
+      <div class="prof-emoji">${p.e}</div>
+      <div class="prof-body">
+        <div class="prof-name">${p.n}</div>
+        <div class="prof-desc">${p.desc}</div>
+        <div style="margin-top:6px;height:4px;background:rgba(255,255,255,0.08);border-radius:100px;overflow:hidden">
+          <div style="height:100%;width:${p.score}%;background:${barColor};border-radius:100px;transition:width 0.8s ease"></div>
+        </div>
+      </div>
+      <div class="prof-pct" style="color:${i<3?'#00c878':'var(--accent)'}">${p.score}%</div>
+    </div>`;
+  };
+
+  // Топ-10 сразу, остальные скрыты под кнопкой
+  const top10 = profScores.slice(0,10).map((p,i)=>profHTML(p,i)).join('');
+  const rest   = profScores.slice(10).map((p,i)=>profHTML(p,i+10)).join('');
+  const restCount = profScores.length - 10;
+
+  document.getElementById('res-profs').innerHTML = top10 +
+    (restCount > 0 ? `
+     <div id="profs-more" style="display:none;overflow:hidden;transition:max-height 0.5s ease">${rest}</div>
+     <button onclick="toggleProfs()" id="profs-btn"
+       style="width:100%;margin-top:14px;padding:16px;border-radius:16px;
+              border:2px solid rgba(0,200,255,0.4);background:rgba(0,200,255,0.1);
+              color:#00c8ff;cursor:pointer;font-family:'Russo One',sans-serif;
+              font-size:0.9rem;font-weight:700;letter-spacing:0.05em;
+              transition:all 0.2s;-webkit-tap-highlight-color:transparent;
+              touch-action:manipulation">
+       ▼ &nbsp;Показать все профессии (ещё ${restCount})
+     </button>` : '');
+
+  // Avoid
+  document.getElementById('res-avoid').innerHTML=
+    `<p style="margin-bottom:8px">На основе твоего профиля, следующие направления могут вызывать дискомфорт или не дадут реализовать потенциал:</p>
+     <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">${worstProfs.map(n=>`<span style="padding:5px 12px;border-radius:100px;background:rgba(255,79,107,0.1);border:1px solid rgba(255,79,107,0.25);font-size:0.78rem;color:var(--danger)">${n}</span>`).join('')}</div>
+     <p style="margin-top:10px;font-size:0.78rem;color:var(--muted)">Это не запреты — это сигнал, что придётся тратить значительно больше сил, чем другие люди.</p>`;
+
+  // Anchor
+  document.getElementById('res-anchor').innerHTML=
+    `<div style="margin-bottom:8px;font-weight:700">${RES.anchorLabel}</div>
+     <div style="font-size:0.8rem;color:var(--muted)">Это ценность, от которой ты не готов отказаться в работе. Выбирай компании и позиции, которые её уважают.</div>`;
+
+  // Mission
+  const missionKeys={mission_impact:'🌍 Влияние и масштаб',mission_freedom:'🕊️ Свобода и независимость',
+    mission_mastery:'🏆 Мастерство и рост',mission_harmony:'🌿 Гармония и смыслы',
+    mission_creation:'💡 Создание и творчество',mission_service:'❤️ Служение и помощь'};
+  const topMission=Object.keys(missionKeys).sort((a,b)=>(s[b]||0)-(s[a]||0))[0];
+  const missionDescs={
+    mission_impact:'Ты рождён создавать вещи, которые имеют значение за пределами твоей жизни. Тебя заряжает масштаб — больше людей, больше пользы, больше следа. Мелкие задачи истощают, а не наполняют.',
+    mission_freedom:'Главная ценность — право быть собой и жить по своим правилам. Ты готов жертвовать доходом и комфортом ради автономии. Лучшее место для тебя — там, где никто не стоит над душой.',
+    mission_mastery:'Ты живёшь ради роста. Главный враг — стагнация. Тебя наполняет ощущение, что сегодня ты лучше, чем вчера. Ищи среды, где есть планка и возможность её преодолевать.',
+    mission_harmony:'Смысл для тебя — в качестве отношений и внутреннем покое. Ты ищешь баланс между делом и жизнью. Среды с постоянным давлением и конкуренцией быстро выжигают тебя.',
+    mission_creation:'Тебя переполняют идеи и ты хочешь их воплощать. Лучшее состояние — поток, когда создаёшь что-то новое. Рутина и исполнение чужих сценариев — твой главный враг.',
+    mission_service:'Глубинный смысл — в том, чтобы жизнь других становилась лучше благодаря тебе. Ты наполняешься, когда видишь результат в людях. Работа без человеческого контакта опустошает.',
+  };
+  RES.topMission=topMission;
+  RES.missionLabel=missionKeys[topMission];
+  RES.missionDesc=missionDescs[topMission];
+  document.getElementById('res-mission').innerHTML=
+    `<div style="font-weight:700;margin-bottom:6px">${missionKeys[topMission]}</div>
+     <div style="font-size:0.82rem;color:var(--muted);line-height:1.65">${missionDescs[topMission]}</div>`;
+
+  // Energy
+  const isPhysical=(s.energy_physical||0)>=(s.energy_social||0)&&(s.energy_physical||0)>=(s.energy_solo||0);
+  const isSocial=(s.energy_social||0)>(s.energy_physical||0)&&(s.energy_social||0)>=(s.energy_solo||0);
+  const isStressActive=(s.stress_active||0)>=(s.stress_reflective||0);
+  const energyType=isPhysical?'⚡ Физический тип':isSocial?'🤝 Социальный тип':'🧘 Рефлексивный тип';
+  const energyDesc=isPhysical?'Твоя энергия восстанавливается через тело — движение, спорт, физическую активность. Сидячий образ жизни без нагрузки быстро приводит к упадку сил и раздражительности.':
+    isSocial?'Ты заряжаешься от людей. Живое общение, командная работа, совместные проекты — это твой источник энергии. Изоляция и одиночная работа истощают тебя.':
+    'Ты интроверт по энергетике. Восстанавливаешься в тишине, через рефлексию и уединение. Постоянный шум и коммуникации выматывают. Тебе нужно время наедине с собой каждый день.';
+  const stressDesc=isStressActive?'В стрессе мобилизуешься и действуешь. Бездействие в кризис даётся тяжело.':'В стрессе уходишь внутрь, анализируешь и ищешь решение через рефлексию.';
+  RES.energyType=energyType; RES.energyDesc=energyDesc; RES.stressDesc=stressDesc;
+  document.getElementById('res-energy').innerHTML=
+    `<div style="font-weight:700;margin-bottom:6px">${energyType}</div>
+     <div style="font-size:0.82rem;color:var(--muted);line-height:1.65;margin-bottom:8px">${energyDesc}</div>
+     <div style="font-size:0.78rem;color:var(--muted)">${stressDesc}</div>`;
+
+  // Payment setup
+  document.getElementById('pay-amount').textContent=CONFIG.price+' ₽';
+  document.getElementById('price-display').textContent=CONFIG.price+' ₽';
+  document.getElementById('sbp-number').textContent=CONFIG.sbp;
+  document.getElementById('ymoney-number').textContent=CONFIG.ymoney;
+  document.getElementById('pay-name').textContent=CONFIG.owner;
+
+  showScreen('s-results');
+}
+
+// ═══════════════════════════════════════════════════
+//  PAYMENT & PDF
+// ═══════════════════════════════════════════════════
+function handlePDFRequest(){
+  if(CONFIG.sbp.includes('___') && CONFIG.ymoney.includes('_')){
+    // Реквизиты не настроены — отдаём PDF бесплатно (демо-режим)
+    generateAndDownloadPDF();
+  } else {
+    showScreen('s-pay');
+  }
+}
+
+function generateAndDownloadPDF(){
+  notif('📄 Формируем PDF-отчёт...','ok');
+  const date = new Date().toLocaleDateString('ru-RU');
+  const name = ST.name;
+
+  const bar=(label,val,color)=>`
+    <div class="bar-row">
+      <div class="bar-label">${label}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${val}%;background:${color}"></div></div>
+      <div class="bar-val" style="color:${color}">${val}%</div>
+    </div>`;
+
+  const profRows = RES.profScores.slice(0,10).map((p,i)=>`
+    <div class="prof-row ${i===0?'prof-top':''}">
+      <div class="prof-num">${i+1}</div>
+      <div class="prof-emoji">${p.e}</div>
+      <div class="prof-info">
+        <div class="prof-name">${p.n}</div>
+        <div class="prof-desc">${p.desc}</div>
+      </div>
+      <div class="prof-score" style="color:${i<3?'#00a855':'#666'}">${p.score}%</div>
+      <div class="prof-bar-wrap"><div class="prof-bar-fill" style="width:${p.score}%;background:${i<3?'#00a855':'#999'}"></div></div>
+    </div>`).join('');
+
+  const avoidTags = RES.worstProfs.map(n=>`<span class="avoid-tag">${n}</span>`).join('');
+
+  // Персональный анализ на основе реальных данных
+  const isExtra    = RES.bf.extraversion > 55;
+  const isOpen     = RES.bf.openness > 55;
+  const isConsc    = RES.bf.conscientiousness > 55;
+  const isAgree    = RES.bf.agreeableness > 55;
+  const isStable   = RES.bf.neuroticism < 45;
+  const topProf1   = RES.profScores[0].n;
+  const topProf2   = RES.profScores[1].n;
+  const topProf3   = RES.profScores[2].n;
+  const cogTop     = ['Память','Пространство','Логика','Паттерны','Скорость'];
+  const cogVals    = [RES.cog.memory, RES.cog.spatial, RES.cog.logic, RES.cog.pattern, RES.cog.speed];
+  const bestCogIdx = cogVals.indexOf(Math.max(...cogVals));
+  const bestCog    = cogTop[bestCogIdx];
+  const worstCogIdx= cogVals.indexOf(Math.min(...cogVals));
+  const worstCog   = cogTop[worstCogIdx];
+
+  // Персональный вектор
+  const vecText = (() => {
+    const score1 = RES.profScores[0].score;
+    const score2 = RES.profScores[1].score;
+    const gap    = score1 - score2;
+    if(gap > 12)
+      return `Твой профиль даёт очень чёткий сигнал: «${topProf1}» — это не просто подходящий вариант, а направление где ты можешь стать по-настоящему сильным. Разрыв с остальными профессиями значительный (${score1}% против ${score2}%). Это редкая ясность — используй её.`;
+    else
+      return `Твой профиль достаточно широкий: сразу несколько направлений дают схожий результат — «${topProf1}» (${score1}%), «${topProf2}» (${score2}%), «${topProf3}» (${RES.profScores[2].score}%). Это не слабость — это гибкость. Выбирай то, что сейчас ближе по ситуации, и развивайся глубже.`;
+  })();
+
+  // Персональный когнитивный инсайт
+  const cogText = (() => {
+    const best = cogVals[bestCogIdx];
+    const worst = cogVals[worstCogIdx];
+    let txt = `Твоя сильнейшая когнитивная функция — ${bestCog} (${best}%). `;
+    if(bestCogIdx === 0) txt += 'Ты хорошо удерживаешь информацию в голове — это ценно в задачах, где важен контекст и детали.';
+    if(bestCogIdx === 1) txt += 'Ты мыслишь образами и пространством — это даёт преимущество в дизайне, инженерии, архитектуре.';
+    if(bestCogIdx === 2) txt += 'Ты логически организован — умеешь выстраивать причинно-следственные цепочки там, где другие теряются.';
+    if(bestCogIdx === 3) txt += 'Ты видишь закономерности — это редкий аналитический навык, особенно ценный в стратегии и исследованиях.';
+    if(bestCogIdx === 4) txt += 'Ты быстро обрабатываешь информацию — это даёт преимущество в условиях многозадачности и давления времени.';
+    if(best - worst > 20)
+      txt += ` При этом ${worstCog} (${worst}%) — зона, которую стоит учитывать при выборе задач. Не избегай её, но опирайся на сильное.`;
+    return txt;
+  })();
+
+  // Персональная рабочая среда
+  const envText = (() => {
+    let parts = [];
+    if(isExtra)
+      parts.push('Ты заряжаешься от людей — тебе нужны живые коммуникации, команда, совместная работа. Изоляция быстро тебя истощает.');
+    else
+      parts.push('Тебе нужно личное пространство для глубокой работы. Открытые офисы и постоянный поток встреч — не твоя среда.');
+    if(isConsc)
+      parts.push('Ты хорошо работаешь со структурой и планированием — используй это как конкурентное преимущество.');
+    else
+      parts.push('Жёсткие регламенты и бюрократия тебя тормозят — ищи среды с гибкостью и автономией.');
+    if(isOpen)
+      parts.push('Ты любишь новое — смена задач, горизонты и эксперименты дают тебе энергию.');
+    return parts.join(' ');
+  })();
+
+  // Персональная ловушка
+  const trapText = (() => {
+    if(!isStable && !isConsc)
+      return `Главная зона риска для тебя — эмоциональные решения в моменте. Ты можешь выбирать направление по настроению, а не по стратегии. Поставь якорь: 1–2 конкретные цели на год, к которым возвращаешься вне зависимости от состояния.`;
+    if(isConsc && !isExtra)
+      return `Ты склонен к перфекционизму и самокритике. Риск — долго готовиться, но не начинать. Помни: сделанное несовершенно всегда лучше несделанного идеально.`;
+    if(isExtra && !isConsc)
+      return `Тебе легко начинать новое, но сложнее доводить до конца. Твой риск — рассыление по многим проектам. Выбери одно главное направление и дай ему время созреть.`;
+    return `Твой профиль достаточно сбалансирован. Главный риск — сравнение с другими и недооценка собственного пути. Твои сильные стороны уникальны — не пытайся стать копией чужого успеха.`;
+  })();
+
+  // Первый шаг — конкретный
+  const stepText = `Не читай отчёт как художественную книгу — используй его как рабочий инструмент. Прямо сейчас: выпиши 1–2 направления из Топ-3, найди 3 человека в этой сфере в LinkedIn или Telegram, и напиши им с конкретным вопросом о реальных задачах. Это занимает 20 минут и даёт больше, чем месяц размышлений.`;
+
+  const recItems = [
+    `<strong>Твой вектор:</strong> ${vecText}`,
+    `<strong>Когнитивный инсайт:</strong> ${cogText}`,
+    `<strong>Рабочая среда:</strong> ${envText}`,
+    `<strong>Карьерный якорь:</strong> ${RES.anchorLabel}. Это не просто предпочтение — это базовая потребность. Работа без неё будет ощущаться как чужая, даже если всё внешне хорошо.`,
+    `<strong>Зона риска:</strong> ${trapText}`,
+    `<strong>Первый шаг (сделай сегодня):</strong> ${stepText}`,
+  ].map(r=>`<div class="rec-item"><div class="rec-dot"></div><div>${r}</div></div>`).join('');
+
+  const html = `<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>ПроФильтр — Распаковка личности — ${name}</title>
+<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: 'Raleway', 'Arial', sans-serif; color: #1a1a2e; background: #fff; font-size: 11pt; }
+
+  .cover {
+    page-break-after: always; min-height: 297mm;
+    background: linear-gradient(160deg, #080820 0%, #0a1560 50%, #050a30 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 40px; position: relative; overflow: hidden;
+  }
+  .cover::before {
+    content:''; position:absolute; inset:0;
+    background: radial-gradient(ellipse 80% 60% at 30% 20%, rgba(0,150,255,0.15), transparent),
+                radial-gradient(ellipse 60% 60% at 80% 80%, rgba(120,50,255,0.1), transparent);
+  }
+  .cover-logo { font-size: 42pt; font-weight: 800; color: #fff; margin-bottom: 4px; position:relative; }
+  .cover-logo span { color: #00c8ff; }
+  .cover-tagline { font-size: 11pt; color: rgba(180,220,255,0.7); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 8px; position:relative; }
+  .cover-subtitle { font-size: 9pt; color: rgba(150,190,255,0.5); letter-spacing: 2px; margin-bottom: 44px; position:relative; }
+  .cover-box {
+    background: rgba(255,255,255,0.06); border: 1.5px solid rgba(0,200,255,0.3);
+    border-radius: 20px; padding: 32px 44px; max-width: 400px; position: relative;
+  }
+  .cover-arch-label { font-size: 7.5pt; color: #00c8ff; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 10px; }
+  .cover-arch-icon  { font-size: 44pt; margin-bottom: 8px; }
+  .cover-arch-name  { font-size: 26pt; font-weight: 800; color: #fff; margin-bottom: 12px; }
+  .cover-arch-desc  { font-size: 9pt; color: rgba(200,230,255,0.8); line-height: 1.65; }
+  .cover-meta { margin-top: 36px; color: rgba(150,190,255,0.6); font-size: 9pt; position:relative; line-height: 1.8; }
+  .cover-meta strong { color: rgba(200,230,255,0.9); }
+  .cover-footer { position: absolute; bottom: 20px; font-size: 7pt; color: rgba(80,110,160,0.5); letter-spacing: 1px; }
+
+  .page-header {
+    background: linear-gradient(135deg, #0064c8, #0096e8); color: #fff;
+    padding: 8px 22px; display: flex; justify-content: space-between; align-items: center;
+    font-size: 7.5pt; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 22px;
+  }
+  .page { padding: 0 22px 22px; page-break-after: always; }
+  .page:last-child { page-break-after: auto; }
+
+  .section-title {
+    color: #fff; padding: 8px 14px; border-radius: 8px;
+    font-size: 9.5pt; font-weight: 700; letter-spacing: 0.5px; margin: 16px 0 11px;
+  }
+  .section-intro { font-size: 8.5pt; color: #666; line-height: 1.65; margin-bottom: 12px; }
+  h1 { font-size: 16pt; font-weight: 800; color: #0a0a2e; margin-bottom: 5px; }
+
+  .bar-row { display:flex; align-items:center; gap:8px; margin:6px 0; }
+  .bar-label { font-size: 8pt; color: #555; width: 148px; flex-shrink:0; }
+  .bar-track { flex:1; height: 7px; background: #eee; border-radius: 100px; overflow:hidden; }
+  .bar-fill  { height:100%; border-radius:100px; }
+  .bar-val   { font-size: 8pt; font-weight: 700; width: 34px; text-align: right; }
+
+  .mission-box {
+    background: linear-gradient(135deg, #fffbeb, #fef3c7);
+    border: 1.5px solid #fcd34d; border-radius: 14px; padding: 16px 18px; margin: 10px 0;
+  }
+  .mission-title { font-size: 13pt; font-weight: 800; color: #92400e; margin-bottom: 7px; }
+  .mission-desc  { font-size: 9pt; color: #78350f; line-height: 1.65; }
+
+  .energy-box {
+    background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+    border: 1.5px solid #86efac; border-radius: 14px; padding: 16px 18px; margin: 10px 0;
+  }
+  .energy-title { font-size: 12pt; font-weight: 800; color: #14532d; margin-bottom: 6px; }
+  .energy-desc  { font-size: 9pt; color: #166534; line-height: 1.65; }
+
+  .prof-row {
+    display: flex; align-items: center; gap: 9px;
+    padding: 9px 11px; border-radius: 10px;
+    background: #f8f9ff; margin: 4px 0; border: 1px solid #e8eaf0;
+  }
+  .prof-top { background: #f0fff8; border-color: #00c878; }
+  .prof-num  { font-size: 8.5pt; font-weight: 800; color: #999; width: 16px; flex-shrink:0; }
+  .prof-emoji{ font-size: 15pt; flex-shrink:0; }
+  .prof-info { flex:1; }
+  .prof-name { font-size: 9.5pt; font-weight: 700; color: #1a1a2e; }
+  .prof-desc { font-size: 7pt; color: #888; margin-top: 1px; }
+  .prof-score{ font-size: 10pt; font-weight: 800; width: 38px; text-align:right; flex-shrink:0; }
+  .prof-bar-wrap { width: 55px; height: 5px; background: #e8e8e8; border-radius: 100px; overflow:hidden; flex-shrink:0; }
+  .prof-bar-fill { height:100%; border-radius:100px; }
+
+  .avoid-tags { display:flex; flex-wrap:wrap; gap:6px; margin: 9px 0; }
+  .avoid-tag {
+    padding: 4px 11px; border-radius: 100px;
+    background: #fff0f2; border: 1px solid #ffb3be;
+    font-size: 8pt; font-weight: 700; color: #c0293d;
+  }
+  .avoid-note { font-size: 7.5pt; color: #888; line-height: 1.6; margin-top: 7px; font-style: italic; }
+
+  .anchor-box {
+    background: linear-gradient(135deg, #f5f0ff, #ede5ff);
+    border: 1.5px solid #c8b0ff; border-radius: 12px; padding: 16px 18px; margin: 10px 0;
+  }
+  .anchor-title { font-size: 11pt; font-weight: 800; color: #5010a0; margin-bottom: 5px; }
+  .anchor-desc  { font-size: 8.5pt; color: #6a4a9a; line-height: 1.65; }
+
+  .rec-item {
+    display:flex; gap:9px; align-items:flex-start;
+    background: #f4fff9; border: 1px solid #c0f0d8;
+    border-radius: 10px; padding: 11px 13px; margin: 6px 0;
+    font-size: 8.5pt; line-height: 1.65; color: #1a3a28;
+  }
+  .rec-dot { width:7px; height:7px; border-radius:50%; background:#00a855; flex-shrink:0; margin-top:5px; }
+
+  /* TRACKER CTA PAGE */
+  .tracker-page {
+    page-break-before: always; min-height: 200mm;
+    background: linear-gradient(160deg, #0a0a28 0%, #1a0a3a 60%, #080818 100%);
+    padding: 40px; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; text-align: center;
+  }
+  .tracker-title { font-size: 22pt; font-weight: 800; color: #fff; margin-bottom: 10px; }
+  .tracker-sub   { font-size: 11pt; color: rgba(200,200,255,0.7); margin-bottom: 30px; line-height: 1.6; }
+  .tracker-box {
+    background: rgba(255,255,255,0.06); border: 1.5px solid rgba(168,85,247,0.4);
+    border-radius: 18px; padding: 28px 36px; max-width: 380px;
+    margin-bottom: 24px;
+  }
+  .tracker-why { font-size: 9.5pt; color: rgba(220,200,255,0.85); line-height: 1.7; margin-bottom: 20px; text-align: left; }
+  .tracker-why li { margin-bottom: 7px; }
+  .tracker-contact { font-size: 16pt; font-weight: 800; color: #a78bfa; margin-bottom: 6px; }
+  .tracker-contact-sub { font-size: 9pt; color: rgba(180,160,255,0.7); }
+  .tracker-quote {
+    font-size: 10pt; font-style: italic; color: rgba(200,200,255,0.6);
+    max-width: 380px; line-height: 1.7; margin-top: 20px;
+  }
+
+  .report-footer {
+    border-top: 1px solid #e0e0ee; padding-top: 10px; margin-top: 18px;
+    font-size: 7pt; color: #aaa; line-height: 1.6; text-align: center;
+  }
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .no-print { display:none; }
+  }
+  .print-btn {
+    position: fixed; bottom: 22px; right: 22px; z-index: 999;
+    background: linear-gradient(135deg, #0064c8, #0096e8);
+    color: #fff; border: none; border-radius: 50px;
+    padding: 13px 26px; font-size: 13px; font-weight: 700;
+    cursor: pointer; box-shadow: 0 6px 24px rgba(0,100,200,0.4);
+    font-family: 'Raleway', sans-serif;
+  }
+  .print-hint {
+    position: fixed; bottom: 72px; right: 22px; z-index: 999;
+    background: #1a1a2e; color: #fff; border-radius: 10px;
+    padding: 9px 14px; font-size: 11px; max-width: 220px; line-height: 1.5;
+  }
+  .contents-list { text-align: left; margin: 0 auto; max-width: 360px; }
+  .contents-block { margin-bottom: 18px; }
+  .contents-block-title { font-size: 9pt; font-weight: 800; color: rgba(180,200,255,0.9); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+  .contents-item { font-size: 10pt; color: rgba(200,220,255,0.75); padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; gap: 10px; }
+  .contents-num { font-size: 8pt; color: rgba(100,150,255,0.6); width: 18px; flex-shrink:0; }
+</style>
+</head>
+<body>
+
+<div class="no-print">
+  <div class="print-hint">👆 Нажми кнопку → «Сохранить как PDF»</div>
+  <button class="print-btn" onclick="window.print()">🖨️ Сохранить PDF</button>
+</div>
+
+<!-- ОБЛОЖКА -->
+<div class="cover">
+  <div class="cover-logo">Про<span>Фильтр</span></div>
+  <div class="cover-tagline">Распаковка личности</div>
+  <div class="cover-subtitle">Персональный отчёт о профессиональном потенциале</div>
+  <div class="cover-box">
+    <div class="cover-arch-label">Твой архетип</div>
+    <div class="cover-arch-icon">${RES.archetype.icon}</div>
+    <div class="cover-arch-name">${RES.archetype.name}</div>
+    <div class="cover-arch-desc">${RES.archetype.desc}</div>
+    <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.15);font-size:8pt;color:rgba(180,220,255,0.7);line-height:1.6">
+      Топ-3 направления: ${RES.profScores[0].n}, ${RES.profScores[1].n}, ${RES.profScores[2].n}
+    </div>
+  </div>
+  <div class="cover-meta">
+    <strong>Подготовлен для:</strong> ${name}<br>
+    <strong>Дата:</strong> ${date}
+  </div>
+  <div class="cover-footer">Версия 2.0 · Конфиденциально · Только для получателя</div>
+</div>
+
+<!-- СОДЕРЖАНИЕ — светлая страница, работает на мобиле -->
+<div style="page-break-after:always; min-height:200mm; padding:40px 32px;
+  background:#ffffff; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+
+  <!-- Шапка -->
+  <div style="width:100%;max-width:400px;text-align:center;margin-bottom:32px">
+    <div style="display:inline-block;background:linear-gradient(135deg,#0050c8,#0080f0);
+      color:#fff;padding:6px 20px;border-radius:100px;font-size:8pt;
+      font-weight:800;letter-spacing:3px;text-transform:uppercase;margin-bottom:14px">
+      Содержание отчёта
+    </div>
+    <div style="font-size:22pt;font-weight:800;color:#0a0a2e;line-height:1.2">Что внутри?</div>
+  </div>
+
+  <!-- Блок 1 -->
+  <div style="width:100%;max-width:400px;margin-bottom:20px">
+    <div style="background:linear-gradient(135deg,#0050c8,#0080f0);color:#fff;
+      padding:8px 16px;border-radius:10px;font-size:9pt;font-weight:800;
+      letter-spacing:1px;margin-bottom:2px">
+      📊 Блок профориентации
+    </div>
+    <div style="border:1.5px solid #e0e8f8;border-top:none;border-radius:0 0 10px 10px;overflow:hidden">
+      ${['Профиль способностей','Личностный профиль','Жизненная миссия',
+         'Карьерный вектор — Топ-10 профессий','Антипрофессии — куда НЕ идти',
+         'Мотивация в работе / Карьерный якорь'].map((t,i)=>`
+        <div style="display:flex;align-items:center;gap:12px;padding:9px 14px;
+          border-bottom:1px solid #eef2fb;font-size:9.5pt;color:#1a1a3e;
+          background:${i%2===0?'#fff':'#f8faff'}">
+          <span style="background:#0064c8;color:#fff;border-radius:50%;width:20px;height:20px;
+            display:flex;align-items:center;justify-content:center;
+            font-size:7.5pt;font-weight:800;flex-shrink:0">${i+1}</span>
+          ${t}
+        </div>`).join('')}
+    </div>
+  </div>
+
+  <!-- Блок 2 -->
+  <div style="width:100%;max-width:400px;margin-bottom:20px">
+    <div style="background:linear-gradient(135deg,#065f46,#059669);color:#fff;
+      padding:8px 16px;border-radius:10px;font-size:9pt;font-weight:800;
+      letter-spacing:1px;margin-bottom:2px">
+      🌿 Блок личностного развития
+    </div>
+    <div style="border:1.5px solid #d1fae5;border-top:none;border-radius:0 0 10px 10px;overflow:hidden">
+      ${['Профиль энергии и восстановления','Стратегия управления стрессом',
+         'Практические рекомендации'].map((t,i)=>`
+        <div style="display:flex;align-items:center;gap:12px;padding:9px 14px;
+          border-bottom:1px solid #ecfdf5;font-size:9.5pt;color:#1a1a3e;
+          background:${i%2===0?'#fff':'#f0fdf4'}">
+          <span style="background:#059669;color:#fff;border-radius:50%;width:20px;height:20px;
+            display:flex;align-items:center;justify-content:center;
+            font-size:7.5pt;font-weight:800;flex-shrink:0">${i+7}</span>
+          ${t}
+        </div>`).join('')}
+    </div>
+  </div>
+
+  <!-- Блок 3 -->
+  <div style="width:100%;max-width:400px">
+    <div style="background:linear-gradient(135deg,#5b21b6,#7c3aed);color:#fff;
+      padding:8px 16px;border-radius:10px;font-size:9pt;font-weight:800;
+      letter-spacing:1px;margin-bottom:2px">
+      🎯 Следующий шаг
+    </div>
+    <div style="border:1.5px solid #ede9fe;border-top:none;border-radius:0 0 10px 10px;overflow:hidden">
+      <div style="display:flex;align-items:center;gap:12px;padding:9px 14px;
+        font-size:9.5pt;color:#1a1a3e;background:#faf5ff">
+        <span style="background:#7c3aed;color:#fff;border-radius:50%;width:20px;height:20px;
+          display:flex;align-items:center;justify-content:center;
+          font-size:9pt;font-weight:800;flex-shrink:0">→</span>
+        Разбор отчёта с трекером @Alex_protiv
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:28px;font-size:7.5pt;color:#aaa;text-align:center;line-height:1.6">
+    Этот отчёт отражает твоё текущее состояние.<br>Человек меняется — и это нормально.
+  </div>
+</div>
+
+<!-- СТРАНИЦА 2: СПОСОБНОСТИ + МИССИЯ -->
+<div class="page">
+  <div class="page-header">
+    <span>ПроФильтр · Распаковка личности</span>
+    <span>${name} · ${date}</span>
+  </div>
+  <h1>Раздел 1 — Профиль способностей</h1>
+  <p class="section-intro">Результаты 9 испытаний: когнитивные задания (память, логика, скорость), личностные опросники (Big Five), карта интересов, ценности и энергетический профиль. Показатели отражают твои склонности прямо сейчас — это не оценка, а карта.</p>
+  <div style="background:#f0f7ff;border:1px solid #bee3f8;border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:8pt;color:#2c5282;line-height:1.65">
+    <strong>Как читать этот отчёт:</strong> Обращай внимание не на отдельные цифры, а на закономерности — темы, которые повторяются в разных разделах. Именно там скрыта твоя ключевая точка роста.
+  </div>
+
+  <div class="section-title" style="background:linear-gradient(135deg,#0050b4,#0078d4)">Когнитивные способности</div>
+  ${bar('Концентрация и память', RES.cog.memory, '#0096e8')}
+  ${bar('Пространственное мышление', RES.cog.spatial, '#6040d0')}
+  ${bar('Рабочая память / логика', RES.cog.logic, '#00b464')}
+  ${bar('Аналитическое мышление', RES.cog.pattern, '#c8a000')}
+  ${bar('Скорость обработки', RES.cog.speed, '#e05000')}
+
+  <div class="section-title" style="background:linear-gradient(135deg,#4828a0,#6040c8)">Личностный профиль</div>
+  ${bar('Открытость новому опыту', RES.bf.openness, '#0096e8')}
+  ${bar('Добросовестность', RES.bf.conscientiousness, '#00b464')}
+  ${bar('Экстраверсия', RES.bf.extraversion, '#e08000')}
+  ${bar('Доброжелательность', RES.bf.agreeableness, '#50c800')}
+  ${bar('Эмоциональная стабильность', 100-RES.bf.neuroticism, '#00b4c8')}
+
+  <div class="section-title" style="background:linear-gradient(135deg,#92400e,#b45309)">Жизненная миссия</div>
+  <div class="mission-box">
+    <div class="mission-title">${RES.missionLabel}</div>
+    <div class="mission-desc">${RES.missionDesc}</div>
+  </div>
+</div>
+
+<!-- СТРАНИЦА 3: ПРОФЕССИИ -->
+<div class="page">
+  <div class="page-header">
+    <span>ПроФильтр · Распаковка личности</span>
+    <span>${name} · ${date}</span>
+  </div>
+  <h1>Раздел 2 — Карьерный вектор</h1>
+  <p class="section-intro">Направления, где твой профиль создаёт наибольшее конкурентное преимущество. Процент — степень совпадения твоих характеристик с требованиями сферы.</p>
+
+  <div class="section-title" style="background:linear-gradient(135deg,#007840,#00a855)">Где ты раскроешься — Топ-10 профессий</div>
+  ${profRows}
+
+  <div class="section-title" style="background:linear-gradient(135deg,#a00028,#c0003a);margin-top:18px">Антипрофессии — НЕ рекомендуется</div>
+  <p class="section-intro">Следующие сферы потребуют от тебя значительно больше усилий, чем от людей с профилем, изначально ориентированным на них.</p>
+  <div class="avoid-tags">${avoidTags}</div>
+  <p class="avoid-note">Это не запрет. Если направление по-настоящему привлекает — ты можешь в нём преуспеть. Но будь готов: придётся вкладывать заметно больше сил, чем тем, кому эта сфера органична.</p>
+</div>
+
+<!-- СТРАНИЦА 4: ЯКОРЬ + ЭНЕРГИЯ + РЕКОМЕНДАЦИИ -->
+<div class="page">
+  <div class="page-header">
+    <span>ПроФильтр · Распаковка личности</span>
+    <span>${name} · ${date}</span>
+  </div>
+  <h1>Раздел 3 — Мотивация, энергия и рекомендации</h1>
+
+  <div class="section-title" style="background:linear-gradient(135deg,#500096,#7820c8)">Мотивация в работе / Карьерный якорь</div>
+  <div class="anchor-box">
+    <div class="anchor-title">${RES.anchorLabel}</div>
+    <div class="anchor-desc">Это глубинная ценность, от которой ты не готов отказаться в работе, даже ради высокого дохода. Выбирай компании, роли и проекты, которые её уважают — иначе даже объективный успех будет ощущаться как пустота.</div>
+  </div>
+
+  <div class="section-title" style="background:linear-gradient(135deg,#065f46,#047857)">Профиль энергии и восстановления</div>
+  <div class="energy-box">
+    <div class="energy-title">${RES.energyType}</div>
+    <div class="energy-desc">${RES.energyDesc}<br><br><em>${RES.stressDesc}</em></div>
+  </div>
+
+  <div class="section-title" style="background:linear-gradient(135deg,#006432,#008c46)">Практические рекомендации</div>
+  ${recItems}
+
+  <div class="report-footer">
+    Отчёт сгенерирован ${date} · ПроФильтр v2.0 ·
+    Результаты основаны на серии диагностических заданий и отражают текущее состояние.
+    Используй как карту, а не окончательный вердикт. Профессиональная карьера формируется из опыта, образования и личных выборов.
+  </div>
+</div>
+
+<!-- ТРЕКЕРСТВО — ФИНАЛЬНАЯ СТРАНИЦА -->
+<div class="tracker-page">
+  <div style="font-size:9pt;color:rgba(168,85,247,0.8);letter-spacing:4px;text-transform:uppercase;margin-bottom:10px;position:relative">Следующий шаг</div>
+  <div class="tracker-title" style="position:relative">Отчёт — это карта.<br>Нужен проводник.</div>
+  <div class="tracker-sub" style="position:relative">
+    Самостоятельное изучение полезно, но имеет ограничения.<br>
+    Мозг склонен искажать информацию о себе и не замечать слепые зоны.
+  </div>
+  <div class="tracker-box" style="position:relative">
+    <div class="tracker-why">
+      <p style="color:rgba(200,180,255,0.9);font-weight:700;margin-bottom:12px">Почему разбор с трекером эффективнее:</p>
+      <ul style="padding-left:16px">
+        <li>Помогает связать отчёт с реальной жизнью</li>
+        <li>Видит слепые зоны, которые ты не замечаешь</li>
+        <li>Подсвечивает закономерности со стороны</li>
+        <li>Переводит выводы в конкретные действия</li>
+        <li>Ускоряет изменения в 2–3 раза по сравнению с самостоятельной работой</li>
+      </ul>
+    </div>
+    <div class="tracker-contact">@Alex_protiv</div>
+    <div class="tracker-contact-sub">Александр Абайдулин · Трекер · Telegram</div>
+  </div>
+  <div class="tracker-quote" style="position:relative">
+    «Отчёт — это точка старта, а не финал.<br>
+    Он начинает работать только тогда, когда ты делаешь первый шаг.»
+  </div>
+</div>
+
+</body>
+</html>`;
+
+  const blob = new Blob([html], {type: 'text/html;charset=utf-8'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const fname = 'ПроФильтр_Распаковка_' + ST.name + '_' + new Date().toLocaleDateString('ru-RU').replace(/\./g,'-') + '.html';
+  a.href = url; a.download = fname;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 3000);
+
+  notif('✅ Отчёт скачан!','ok');
+  showScreen('s-results');
+
+  setTimeout(()=>{
+    const hint = document.createElement('div');
+    hint.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1a1a30;border:1px solid rgba(0,200,255,0.3);border-radius:14px;padding:14px 18px;z-index:9999;max-width:340px;text-align:center;font-size:0.82rem;line-height:1.6;color:#e8f4ff';
+    hint.innerHTML = '📄 <strong>Файл отчёта скачан!</strong><br>Открой <strong>.html</strong> файл в браузере,<br>нажми <strong>Ctrl+P</strong> → «Сохранить как PDF»<br><button onclick="this.parentElement.remove()" style="margin-top:10px;padding:6px 16px;border-radius:8px;border:none;background:rgba(0,200,255,0.2);color:#00c8ff;cursor:pointer;font-size:0.8rem">Понятно ✓</button>';
+    document.body.appendChild(hint);
+    setTimeout(()=>{ if(hint.parentElement) hint.remove(); }, 15000);
+  }, 600);
+}
+
+// ═══════════════════════════════════════════════════
+//  MISC
+// ═══════════════════════════════════════════════════
+function toggleProfs(){
+  const more = document.getElementById('profs-more');
+  const btn  = document.getElementById('profs-btn');
+  if(!more || !btn) return;
+  const isHidden = (more.style.display === 'none' || more.style.display === '');
+  if(isHidden){
+    more.style.display = 'block';
+    more.style.opacity = '0';
+    more.style.animation = 'fadeIn 0.4s ease forwards';
+    btn.innerHTML = '▲ &nbsp;Скрыть список';
+    btn.style.color = 'rgba(255,255,255,0.5)';
+    btn.style.borderColor = 'rgba(255,255,255,0.2)';
+    btn.style.background  = 'rgba(255,255,255,0.05)';
+    // прокрутка вниз к первой скрытой профессии
+    setTimeout(()=>{
+      more.scrollIntoView({behavior:'smooth', block:'nearest'});
+    }, 100);
+  } else {
+    more.style.display = 'none';
+    const cnt = more.querySelectorAll('.prof-item').length;
+    btn.innerHTML = '▼ &nbsp;Показать все профессии (ещё '+cnt+')';
+    btn.style.color = '#00c8ff';
+    btn.style.borderColor = 'rgba(0,200,255,0.4)';
+    btn.style.background  = 'rgba(0,200,255,0.1)';
+  }
+}
+
+function restartApp(){
+  // Reset state
+  Object.keys(ST.scores).forEach(k=>ST.scores[k]=0);
+  ST.name=''; ST.phase=0;
+  document.getElementById('inp-name').value='';
+  showScreen('s-welcome');
+}
+
+// Service Worker
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>
