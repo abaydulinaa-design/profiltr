@@ -1,16 +1,29 @@
 {
-  "name": "ПроФильтр — Исследование потенциала",
+  "name": "ПроФильтр — Распаковка личности",
   "short_name": "ПроФильтр",
   "description": "7 испытаний — полный профиль потенциала и PDF-отчёт с карьерными рекомендациями",
-  "start_url": "/",
+  "start_url": "/landing.html",
   "display": "standalone",
   "background_color": "#080810",
   "theme_color": "#080810",
   "orientation": "portrait-primary",
   "icons": [
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
   ],
-  "categories": ["education", "lifestyle"],
+  "categories": [
+    "education",
+    "lifestyle"
+  ],
   "lang": "ru"
 }
